@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=VELUNO
+Comment=Lokale Film- und Serienmediathek
+Exec=veluno
+Icon=veluno
+Terminal=false
+Categories=AudioVideo;Video;

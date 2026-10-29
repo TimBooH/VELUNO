@@ -1,0 +1,55 @@
+# Entwicklungsprotokoll · 29.10.2026
+
+## Grundlage und Freigaben
+
+Das Gesamt-Pflichtenheft wurde vor Implementierungsbeginn vollständig gelesen. Der aktuelle Auftrag erteilt die ausdrückliche Entwicklungsfreigabe für das technische Fundament; die älteren Planungsstatusangaben im PDF sind damit für diesen Auftrag überholt. Die übrigen Anforderungen bleiben in REQUIREMENTS.md erhalten.
+
+Das vorhandene öffentliche Repository TimBooH/VELUNO war leer. Der Nutzer erlaubt ausdrücklich einen leeren Initial-Commit für `main`. Dieser leere Stand wurde lokal als `main` angelegt; alle Implementierungsänderungen liegen ausschließlich auf `unstable`. Es wurden keine Quellen hochgeladen, keine Actions auf GitHub ausgeführt und keine Releases veröffentlicht.
+
+## Schritt 1 · Struktur und Build
+
+C++20, CMake ≥ 3.22 und Qt ≥ 6.4 eingerichtet; getrennte Targets für Datenbank, Kern und libmpv-Adapter sowie Schnittstellen-Targets für Scanner und Metadaten. Alle Modulorte aus Abschnitt 11.2 sind angelegt und dokumentiert. QML und Ressourcen sind in die ausführbare Datei eingebettet; Linux-Desktopdatei und vorläufiges Symbol sind installierbar.
+
+Prüfung: Debug-Build mit GCC 14.2, CMake 3.31.6, Qt 6.8.2 und libmpv-Client-API 2.5 unter Debian 13 erfolgreich. CMake-Installation in einen separaten Prefix und Start daraus erfolgreich. Entwicklungswerkzeuge wurden für diese eingeschränkte Umgebung unter `/tmp/veluno-sdk` entpackt; diese Besonderheit ist keine Projektvoraussetzung.
+
+## Schritt 2 · SQLite und Einstellungen
+
+Migration 001 erstellt Standardprofil und App-Einstellungen. Migrationen sind versioniert und transaktional. Konsistenzprüfung und Ablehnung neuerer Schemata verhindern stilles Überschreiben. Das Design wird persistent gespeichert; ein Schreibfehler lässt das bisherige Design bestehen und erscheint in den Einstellungen.
+
+Prüfung: Fünf Datenbank-Testfälle erfolgreich: Erststart/Neustart/Persistenz/kein doppeltes Profil, Rollback bei fehlerhafter Migration mit erfolgreichem Folgelauf, unveränderte neuere Datenbank, unveränderte defekte Datenbank, gesperrte Datenbank mit anschließender Erholung. Der Lock-Test wartet absichtlich auf das 5-Sekunden-Busy-Timeout.
+
+## Schritt 3 · Desktop-Oberfläche
+
+Reguläres Qt-Quick-Fenster mit Systemdekorationen; Midnight Blue als Standard und gespeicherter Light Mode. Feste obere Navigation mit den fünf vereinbarten Bereichen; Suche rechts als noch deaktivierter Platzhalter. Einstellungen ausschließlich über das Profilmenü erreichbar. Leere Startseitenreihen sind nicht sichtbar. Die sieben Einstellungsbereiche sind angelegt; nur das Erscheinungsbild ist bereits funktional.
+
+Prüfung: Drei QML-Testfälle für Navigation, Profilmenü/Einstellungen/Theme-Auswahl per Tastatur sowie Fenstergröße/Schließen erfolgreich, jeweils offscreen und mit nativem Wayland-Backend gegen Weston 14 im Headless-Modus. Beide Designs und die Startseite wurden als echte Qt-Renderbilder geprüft; Aufnahmen liegen in `screenshots/`.
+
+Befunde und Korrekturen: Die anfänglich zu breite Einstellungsnavigation wurde auf 180 px begrenzt und mit einer Breitenprüfung abgesichert. Der QML-Testaufbau initialisiert SQLite erst nach Erzeugung der Anwendung und gibt Verbindungen vor deren Ende frei. Tastaturereignisse werden im Test ausdrücklich an das getestete Fenster zugestellt, damit die Aktivierungsreihenfolge des Wayland-Compositors den Test nicht verfälscht.
+
+## Schritt 4 · Modulgrenzen
+
+libmpv ist eine echte Build-/Link-Abhängigkeit. Der Adapter besitzt einen vorbereiteten RAII-Lebenszyklus, initialisiert aber keine Wiedergabe oder Geräte. Scanner und Metadaten sind ausschließlich Schnittstellen; kein Scan, kein Onlineabruf und keine Mediendateiänderung werden gestartet.
+
+Prüfung: Alle Komponenten bauen zusammen. Die libmpv-API-Version wird beim Start erfolgreich gelesen. Eine Video-/Audio-Wiedergabe wird damit ausdrücklich nicht behauptet. Die Metadaten-Einwilligung bleibt unentschieden, es existiert kein Netzwerkclient.
+
+## Schritt 5 · Paket und CI
+
+Actions-Workflow nur für `unstable`, mit Tests vor Paketierung/Artefakt-Upload und ohne Release-Schritt. Paketierungswerkzeuge sind per SHA-256 fixiert. Lokales AppImage wurde gebaut und mit isolierten Qt-/Bibliothekspfaden offscreen gestartet.
+
+Befund und Korrektur: Der erste Paketversuch nutzte unbemerkt Plugins aus der Build-Umgebung. Die isolierte Prüfung deckte fehlende Offscreen-/Wayland-Plattformplugins auf. Diese werden nun ausdrücklich paketiert; die isolierte Paketprüfung ist Bestandteil des Skripts. Das korrigierte Paket startet ohne die SDK-Pfade erfolgreich offscreen. Ergebnis des abschließenden nativen Wayland-Paketstarts: siehe Abschlussprüfung unten.
+
+## Verbleibende Grenzen und offene Prüfungen
+
+- Kein CachyOS/KDE-Plasma-Desktop in dieser Umgebung: tatsächliches Fensterverschieben, KWin-Dekorationen, Mehrschirmbetrieb und HiDPI sind nicht abgenommen. Weston bestätigt nur den nativen Wayland-Start und die automatisierte Bedienung mit Software-Rendering.
+- Kein GPU-/HDR-/Video-/Audio-Test; die konkrete mpv-Renderintegration bleibt O-003/O-004.
+- AppImage wurde lokal mit Extraktion statt FUSE gestartet. Ubuntu-Actions-Ausführung und Auslieferung auf einem frischen Zielsystem stehen aus. Das lokale Paket wurde auf Debian 13 gebaut und ist keine zugesagte Distributionsmatrix.
+- CMake meldete in der entpackten Qt-Umgebung fehlende importierte QML-Plugin-Targets; die dynamischen Plugins wurden zur Laufzeit und im Paket erfolgreich geladen. Diese Umgebungswarnungen wurden nicht durch Ausblenden unterdrückt.
+- linuxdeploy meldete fehlende Copyright-Dateien für einzelne entpackte Abhängigkeiten, die der System-Paketdatenbank nicht bekannt sind. Drittanbieterhinweise und Lizenzen sind vor einer Veröffentlichung vollständig zu prüfen. Keine Releasefreigabe wird daraus abgeleitet.
+- Einrichtung, Medienimport, Suche, echte Profilverwaltung, Wiedergabe, Favoriten/Sammlungen, Sicherung und Updates bleiben gemäß Auftrag spätere Schritte.
+- Bei einem Datenbankfehler erscheint derzeit eine Startdiagnose auf stderr; ein grafischer Reparaturdialog ist noch nicht implementiert. Die Anwendung ersetzt keine beschädigten Daten.
+
+## Abschlussprüfung
+
+Korrigiertes AppImage erfolgreich nativ unter Wayland gestartet (`platform: wayland`, Exit 0), ohne `LD_LIBRARY_PATH`, `QT_PLUGIN_PATH`, `QML_IMPORT_PATH` oder `QML2_IMPORT_PATH` aus der SDK-Umgebung. Auch der isolierte Offscreen-Start ist erfolgreich. Paketgröße ungefähr 120 MiB; Prüfsummendatei liegt neben dem lokalen Paket im ignorierten Buildverzeichnis.
+
+Die Quelländerungen sind lokal auf `unstable` gesichert. `main` enthält ausschließlich den freigegebenen leeren Initial-Commit. Für das öffentliche GitHub-Repository wurde kein Upload oder Release vorgenommen; ein echter Actions-Artefakt-Nachweis folgt erst nach Freigabe und Ausführung dort.
