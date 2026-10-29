@@ -20,7 +20,7 @@ TestCase {
         let buttons = []
         function collect(item) {
             if (item.text !== undefined && shell.navigation.indexOf(item.text) >= 0 && item.clicked !== undefined) buttons.push(item)
-            for (let child of item.children) collect(child)
+            for (let i = 0; i < item.children.length; ++i) collect(item.children[i])
         }
         collect(shell.header)
         compare(buttons.length, 5)

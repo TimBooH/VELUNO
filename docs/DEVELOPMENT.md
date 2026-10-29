@@ -53,3 +53,7 @@ Befund und Korrektur: Der erste Paketversuch nutzte unbemerkt Plugins aus der Bu
 Korrigiertes AppImage erfolgreich nativ unter Wayland gestartet (`platform: wayland`, Exit 0), ohne `LD_LIBRARY_PATH`, `QT_PLUGIN_PATH`, `QML_IMPORT_PATH` oder `QML2_IMPORT_PATH` aus der SDK-Umgebung. Auch der isolierte Offscreen-Start ist erfolgreich. Paketgröße ungefähr 120 MiB; Prüfsummendatei liegt neben dem lokalen Paket im ignorierten Buildverzeichnis.
 
 Die Quelländerungen sind lokal auf `unstable` gesichert. `main` enthält ausschließlich den freigegebenen leeren Initial-Commit. Für das öffentliche GitHub-Repository wurde kein Upload oder Release vorgenommen; ein echter Actions-Artefakt-Nachweis folgt erst nach Freigabe und Ausführung dort.
+
+## GitHub-Freigabe und erster CI-Lauf
+
+Nach ausdrücklicher Upload-Freigabe wurden der leere `main`-Stand und `unstable` übertragen. Lauf [40937803490](https://github.com/TimBooH/VELUNO/actions/runs/40937803490) baute unter Ubuntu 24.04 / Qt 6.4.2 erfolgreich; Datenbanktests, Profilmenü/Theme und Fensterprüfung bestanden. Der Navigationstest scheiterte an `for…of` über die QML-Kinderliste, deren Iterator Qt 6.4 noch nicht bereitstellt. Die Traversierung nutzt nun kompatiblen Indexzugriff; kein Anwendungscode wurde dafür geändert. Das vom QML-Importscanner vermisste Paket `qml6-module-qtqml` ist in den Abhängigkeiten ergänzt.
