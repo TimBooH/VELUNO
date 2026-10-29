@@ -27,6 +27,7 @@ Item {
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton
+        onEntered: page.revealControls()
         onPositionChanged: page.revealControls()
         onClicked: page.revealControls()
         onDoubleClicked: page.fullscreenRequested()
