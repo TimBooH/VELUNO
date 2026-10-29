@@ -45,6 +45,6 @@ Das Design wird über Profilmenü → Einstellungen → Allgemein gewählt und i
 - Ein Repository, Entwicklung ausschließlich auf `unstable`.
 - `main` enthält vorerst ausschließlich den ausdrücklich erlaubten leeren Initial-Commit.
 - Kein Release-/Publish-Workflow. Unstable-Pakete ausschließlich als Actions-Artefakte nach Tests.
-- Lokaler Quellcode wird erst nach Freigabe in das öffentliche Repository übertragen.
+- Der technische Entwicklungsstand wurde nach ausdrücklicher Freigabe auf `unstable` übertragen. Stable-Releases benötigen weiterhin eine gesonderte Freigabe.
 
 [Architektur](docs/ARCHITECTURE.md) · [Entwicklungsprotokoll](docs/DEVELOPMENT.md) · [Anforderungsstatus](docs/REQUIREMENTS.md) · [Pflichtenheft](docs/VELUNO_v0.1.0_Gesamt-Pflichtenheft.pdf)

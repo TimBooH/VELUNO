@@ -4,7 +4,7 @@
 
 Das Gesamt-Pflichtenheft wurde vor Implementierungsbeginn vollständig gelesen. Der aktuelle Auftrag erteilt die ausdrückliche Entwicklungsfreigabe für das technische Fundament; die älteren Planungsstatusangaben im PDF sind damit für diesen Auftrag überholt. Die übrigen Anforderungen bleiben in REQUIREMENTS.md erhalten.
 
-Das vorhandene öffentliche Repository TimBooH/VELUNO war leer. Der Nutzer erlaubt ausdrücklich einen leeren Initial-Commit für `main`. Dieser leere Stand wurde lokal als `main` angelegt; alle Implementierungsänderungen liegen ausschließlich auf `unstable`. Es wurden keine Quellen hochgeladen, keine Actions auf GitHub ausgeführt und keine Releases veröffentlicht.
+Das vorhandene öffentliche Repository TimBooH/VELUNO war leer. Der Nutzer erlaubt ausdrücklich einen leeren Initial-Commit für `main`. Dieser leere Stand wurde lokal als `main` angelegt; alle Implementierungsänderungen liegen ausschließlich auf `unstable`. Bis zur gesonderten Upload-Freigabe wurden keine Quellen hochgeladen und keine Actions auf GitHub ausgeführt. Releases bleiben gesperrt; die anschließende GitHub-Prüfung ist unten dokumentiert.
 
 ## Schritt 1 · Struktur und Build
 
@@ -42,18 +42,28 @@ Befund und Korrektur: Der erste Paketversuch nutzte unbemerkt Plugins aus der Bu
 
 - Kein CachyOS/KDE-Plasma-Desktop in dieser Umgebung: tatsächliches Fensterverschieben, KWin-Dekorationen, Mehrschirmbetrieb und HiDPI sind nicht abgenommen. Weston bestätigt nur den nativen Wayland-Start und die automatisierte Bedienung mit Software-Rendering.
 - Kein GPU-/HDR-/Video-/Audio-Test; die konkrete mpv-Renderintegration bleibt O-003/O-004.
-- AppImage wurde lokal mit Extraktion statt FUSE gestartet. Ubuntu-Actions-Ausführung und Auslieferung auf einem frischen Zielsystem stehen aus. Das lokale Paket wurde auf Debian 13 gebaut und ist keine zugesagte Distributionsmatrix.
+- AppImage wurde lokal mit Extraktion statt FUSE gestartet. Die Ubuntu-Actions-Ausführung ist inzwischen erfolgreich abgeschlossen (Nachweis unten); die Auslieferung auf einem frischen Zielsystem steht aus. Das lokale Paket wurde auf Debian 13 gebaut und ist keine zugesagte Distributionsmatrix.
 - CMake meldete in der entpackten Qt-Umgebung fehlende importierte QML-Plugin-Targets; die dynamischen Plugins wurden zur Laufzeit und im Paket erfolgreich geladen. Diese Umgebungswarnungen wurden nicht durch Ausblenden unterdrückt.
 - linuxdeploy meldete fehlende Copyright-Dateien für einzelne entpackte Abhängigkeiten, die der System-Paketdatenbank nicht bekannt sind. Drittanbieterhinweise und Lizenzen sind vor einer Veröffentlichung vollständig zu prüfen. Keine Releasefreigabe wird daraus abgeleitet.
 - Einrichtung, Medienimport, Suche, echte Profilverwaltung, Wiedergabe, Favoriten/Sammlungen, Sicherung und Updates bleiben gemäß Auftrag spätere Schritte.
 - Bei einem Datenbankfehler erscheint derzeit eine Startdiagnose auf stderr; ein grafischer Reparaturdialog ist noch nicht implementiert. Die Anwendung ersetzt keine beschädigten Daten.
 
-## Abschlussprüfung
+## Lokale Abschlussprüfung vor Upload
 
 Korrigiertes AppImage erfolgreich nativ unter Wayland gestartet (`platform: wayland`, Exit 0), ohne `LD_LIBRARY_PATH`, `QT_PLUGIN_PATH`, `QML_IMPORT_PATH` oder `QML2_IMPORT_PATH` aus der SDK-Umgebung. Auch der isolierte Offscreen-Start ist erfolgreich. Paketgröße ungefähr 120 MiB; Prüfsummendatei liegt neben dem lokalen Paket im ignorierten Buildverzeichnis.
 
-Die Quelländerungen sind lokal auf `unstable` gesichert. `main` enthält ausschließlich den freigegebenen leeren Initial-Commit. Für das öffentliche GitHub-Repository wurde kein Upload oder Release vorgenommen; ein echter Actions-Artefakt-Nachweis folgt erst nach Freigabe und Ausführung dort.
+Zu diesem lokalen Prüfstand waren die Quelländerungen auf `unstable` gesichert; `main` enthielt ausschließlich den freigegebenen leeren Initial-Commit. Ein GitHub-Upload und Actions-Artefakt-Nachweis standen zu diesem Zeitpunkt noch aus. Die anschließende Freigabe und CI-Prüfung sind im folgenden Abschnitt dokumentiert.
 
 ## GitHub-Freigabe und erster CI-Lauf
 
 Nach ausdrücklicher Upload-Freigabe wurden der leere `main`-Stand und `unstable` übertragen. Lauf [40937803490](https://github.com/TimBooH/VELUNO/actions/runs/40937803490) baute unter Ubuntu 24.04 / Qt 6.4.2 erfolgreich; Datenbanktests, Profilmenü/Theme und Fensterprüfung bestanden. Der Navigationstest scheiterte an `for…of` über die QML-Kinderliste, deren Iterator Qt 6.4 noch nicht bereitstellt. Die Traversierung nutzt nun kompatiblen Indexzugriff; kein Anwendungscode wurde dafür geändert. Das vom QML-Importscanner vermisste Paket `qml6-module-qtqml` ist in den Abhängigkeiten ergänzt.
+
+## Erfolgreicher Actions-Nachweis
+
+Lauf [40938184412](https://github.com/TimBooH/VELUNO/actions/runs/40938184412) für Commit `7373f0c54c2f592956580cdcbf2ada5a46cbd299` ist vollständig erfolgreich: Ubuntu 24.04, Qt 6.4.2, Build, beide Testsuiten, Programmstart, AppImage-Paketierung, isolierter Paketstart und Artefakt-Upload.
+
+[Artefakt 12924389858](https://github.com/TimBooH/VELUNO/actions/runs/40938184412/artifacts/12924389858) enthält AppImage und SHA-256-Prüfsumme; ZIP-Größe 112.192.616 Bytes. Aufbewahrung 14 Tage, Ablauf laut GitHub am 12.11.2026 um 20:16 Uhr Europe/Berlin. ZIP-SHA-256: `d549ddb3b9475ecabba73f71ffcdc201822706222f93ff47d735d610b2c2ac5a`.
+
+Nicht blockierende CI-Hinweise: linuxdeploy überspringt erneutes Strippen bereits bearbeiteter ELF-Dateien; AppStream-Metadaten sind noch nicht angelegt; die verwendeten Actions melden Node-20-/Node-24-Übergangshinweise. Diese Hinweise verhindern weder erfolgreichen Paketstart noch Upload. Die Zielsystem-/GPU-/HiDPI-Abnahme bleibt ausstehend.
+
+`main` bleibt bei `864b7861add9787915cb714fc7bdf1260167b606` (leerer Initial-Commit). Kein Stable-Stand und kein GitHub-Release wurden erstellt. Der anschließende reine Dokumentationscommit überspringt CI mit `[skip ci]`; der geprüfte Quell-/Paketstand ist der oben verlinkte Commit.
