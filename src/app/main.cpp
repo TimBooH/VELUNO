@@ -1,3 +1,4 @@
+#include <clocale>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -8,11 +9,14 @@
 #include <QDebug>
 #include "core/AppSettings.h"
 #include "player/MpvEngine.h"
+#include "player/VideoItem.h"
+#include <QSGRendererInterface>
 #include "scanner/Scanner.h"
 #include "metadata/MetadataProvider.h"
 #include <exception>
 int main(int argc, char **argv) {
     QGuiApplication app(argc, argv);
+    std::setlocale(LC_NUMERIC, "C");
     QCoreApplication::setOrganizationName("VELUNO");
     QCoreApplication::setApplicationName("VELUNO");
     QCoreApplication::setApplicationVersion("0.1.0-dev");
@@ -22,8 +26,16 @@ int main(int argc, char **argv) {
         veluno::Database database(path);
         veluno::AppSettings settings(database);
         veluno::MpvEngine player;
+        player.setVolume(database.setting("player_volume", "70").toDouble());
+        QObject::connect(&app, &QCoreApplication::aboutToQuit, &app, [&] {
+            try { database.setSetting("player_volume", QString::number(player.volume())); }
+            catch (const std::exception &e) { qWarning() << "Lautstärke konnte nicht gespeichert werden:" << e.what(); }
+        });
+        qmlRegisterUncreatableType<veluno::MpvEngine>("Veluno.Player", 1, 0, "Playback", "Provided by the application");
+        qmlRegisterType<veluno::VideoItem>("Veluno.Player", 1, 0, "VideoView");
         QQmlApplicationEngine engine;
         engine.rootContext()->setContextProperty("appSettings", &settings);
+        engine.rootContext()->setContextProperty("playback", &player);
         engine.load(QUrl("qrc:/qml/Main.qml"));
         if (engine.rootObjects().isEmpty()) return 1;
         qInfo() << "VELUNO ready; platform:" << QGuiApplication::platformName()

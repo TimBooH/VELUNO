@@ -67,3 +67,15 @@ Lauf [40938184412](https://github.com/TimBooH/VELUNO/actions/runs/40938184412) f
 Nicht blockierende CI-Hinweise: linuxdeploy überspringt erneutes Strippen bereits bearbeiteter ELF-Dateien; AppStream-Metadaten sind noch nicht angelegt; die verwendeten Actions melden Node-20-/Node-24-Übergangshinweise. Diese Hinweise verhindern weder erfolgreichen Paketstart noch Upload. Die Zielsystem-/GPU-/HiDPI-Abnahme bleibt ausstehend.
 
 `main` bleibt bei `864b7861add9787915cb714fc7bdf1260167b606` (leerer Initial-Commit). Kein Stable-Stand und kein GitHub-Release wurden erstellt. Der anschließende reine Dokumentationscommit überspringt CI mit `[skip ci]`; der geprüfte Quell-/Paketstand ist der oben verlinkte Commit.
+
+## Nächster Entwicklungsschritt · Grundlegende lokale Wiedergabe
+
+Nach erfolgreichem Download gab der Nutzer die Fortsetzung frei und wählte zuletzt ausdrücklich die grundlegende libmpv-Wiedergabe. Ordnerverwaltung und Scanner werden separat weitergeführt.
+
+Umgesetzt: native Dateiauswahl/Strg+O, integriertes Bild, Pause/Fortsetzen, Zeitleiste und ±10 Sekunden, Lautstärke/Stumm mit Speicherung beim Beenden, Geschwindigkeit 0,5×–2×, Vollbild/Esc, Audio-/Untertitelspur-Kürzel und sichtbare Wiedergabefehler. Das Overlay blendet nach zwei Sekunden aus und bleibt bei Pause sichtbar.
+
+Der zunächst untersuchte direkte OpenGL-Pfad zeigte instabile schwarze Bilder und Rasterartefakte. Er wurde nicht in den finalen Stand übernommen. Die erste funktionale Stufe verwendet die offizielle libmpv-Software-Render-API auf einem eigenen Worker-Thread mit begrenztem Einzelbildpuffer. GPU-/Hardware-/4K-/HDR-Abnahme bleiben ausdrücklich offen. Details und verbleibender Funktionsumfang: [PLAYER.md](PLAYER.md).
+
+Lokale Abschlussprüfung unter Debian 13 / Qt 6.8.2: alle vier CTest-Suiten bestanden (`player`, `player_render`, `database`, `qml`). Der native Wayland-Test nutzt Weston mit Software-Compositor und kontrolliert mindestens 98 % der gewählten roten/blauen Bildregionen, Geometrieänderung und Abbau während aktiver Wiedergabe. Zusätzlich bestand der identische Bildtest unter X11/Xvfb mit der finalen Softwareausgabe. Damit gilt die frühere X11-Einschränkung des verworfenen OpenGL-Adapters nicht als Einschränkung dieses finalen Software-Adapters. Echte Audioausgabe, CachyOS/KDE, GPU-Decodierung und HiDPI sind weiterhin nicht auf Zielhardware geprüft.
+
+Die Tests verwenden ausschließlich generierte Testmedien und vergleichen Originaldateien per SHA-256. Fehlerfälle (fehlender Pfad, nicht lokale URL, beschädigtes Video) mit anschließender Erholung sowie wiederholtes Öffnen/Stoppen sind geprüft. Die QML-Suite prüft die Player-Bedienung und Overlay-Regeln zusätzlich zur bisherigen Navigation und Theme-Persistenz.

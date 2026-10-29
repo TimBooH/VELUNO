@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 Item {
     required property QtObject theme
+    signal openFileRequested()
     property string pageTitle: "Startseite"
     property string description: "Deine Filme und Serien. An einem Ort."
     ColumnLayout {
@@ -26,9 +27,16 @@ Item {
                     Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap
                 }
                 Label {
-                    text: "Die Bibliothek ist noch leer."
+                    text: "Die Bibliothek ist noch leer. Du kannst bereits eine lokale Videodatei abspielen."
+                    wrapMode: Text.WordWrap
                     color: theme.muted; font.pixelSize: 15
                     Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter
+                }
+                Button {
+                    text: "Datei abspielen"
+                    visible: pageTitle === "Startseite"
+                    Layout.alignment: Qt.AlignHCenter
+                    onClicked: openFileRequested()
                 }
             }
         }

@@ -1,9 +1,11 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Dialogs
 import "themes"
 import "components"
 import "pages"
+import "player"
 ApplicationWindow {
     id: window
     objectName: "mainWindow"
@@ -12,6 +14,33 @@ ApplicationWindow {
     visible: true
     title: "VELUNO"
     color: colors.background
+    property bool playerVisible: false
+    function closePlayer() {
+        playback.stop()
+        playerVisible = false
+        if (visibility === Window.FullScreen) showNormal()
+    }
+    function toggleFullscreen() {
+        if (visibility === Window.FullScreen) showNormal()
+        else showFullScreen()
+    }
+    FileDialog {
+        id: videoFileDialog
+        title: "Videodatei öffnen"
+        nameFilters: ["Videodateien (*.mkv *.mp4 *.m4v *.avi *.mov *.webm *.mpeg *.mpg *.ts *.m2ts *.wmv *.ogv)", "Alle Dateien (*)"]
+        onAccepted: { window.playerVisible = true; playback.openFile(selectedFile) }
+    }
+    Shortcut { sequence: "Ctrl+O"; onActivated: videoFileDialog.open() }
+    Shortcut { sequence: "Space"; enabled: window.playerVisible; onActivated: playback.togglePause() }
+    Shortcut { sequence: "Left"; enabled: window.playerVisible; onActivated: playback.seekRelative(-10) }
+    Shortcut { sequence: "Right"; enabled: window.playerVisible; onActivated: playback.seekRelative(10) }
+    Shortcut { sequence: "Up"; enabled: window.playerVisible; onActivated: playback.volume += 5 }
+    Shortcut { sequence: "Down"; enabled: window.playerVisible; onActivated: playback.volume -= 5 }
+    Shortcut { sequence: "F"; enabled: window.playerVisible; onActivated: window.toggleFullscreen() }
+    Shortcut { sequence: "Escape"; enabled: window.playerVisible; onActivated: { if (window.visibility === Window.FullScreen) window.showNormal() } }
+    Shortcut { sequence: "M"; enabled: window.playerVisible; onActivated: playback.muted = !playback.muted }
+    Shortcut { sequence: "S"; enabled: window.playerVisible; onActivated: playback.cycleSubtitles() }
+    Shortcut { sequence: "A"; enabled: window.playerVisible; onActivated: playback.cycleAudio() }
     property string currentPage: "Startseite"
     readonly property var navigation: ["Startseite", "Filme", "Serien", "Favoriten", "Sammlungen"]
     Theme { id: colors; light: appSettings.theme === "light" }
@@ -31,7 +60,8 @@ ApplicationWindow {
     palette.light: colors.raised
     palette.placeholderText: colors.muted
     header: Rectangle {
-        color: colors.background; height: 88
+        color: colors.background; height: visible ? 88 : 0
+        visible: window.visibility !== Window.FullScreen
         Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: colors.border }
         RowLayout {
             anchors.fill: parent; anchors.leftMargin: 28; anchors.rightMargin: 28
@@ -44,7 +74,7 @@ ApplicationWindow {
                     theme: colors
                     text: modelData
                     selected: currentPage === modelData
-                    onClicked: currentPage = modelData
+                    onClicked: { window.closePlayer(); currentPage = modelData }
                 }
             }
             Item { Layout.fillWidth: true }
@@ -67,8 +97,9 @@ ApplicationWindow {
                     objectName: "profileMenu"
                     y: profileButton.height
                     MenuItem { text: "Standardprofil"; enabled: false }
+                    MenuItem { text: "Datei abspielen…"; onTriggered: videoFileDialog.open() }
                     MenuSeparator {}
-                    MenuItem { objectName: "settingsMenuItem"; text: "Einstellungen"; onTriggered: currentPage = "Einstellungen" }
+                    MenuItem { objectName: "settingsMenuItem"; text: "Einstellungen"; onTriggered: { window.closePlayer(); currentPage = "Einstellungen" } }
                 }
             }
         }
@@ -76,7 +107,8 @@ ApplicationWindow {
     LibraryPage {
         anchors.fill: parent; anchors.margins: 40
         theme: colors
-        visible: currentPage !== "Einstellungen"
+        visible: currentPage !== "Einstellungen" && !window.playerVisible
+        onOpenFileRequested: videoFileDialog.open()
         pageTitle: currentPage
         description: {
             switch (currentPage) {
@@ -90,11 +122,22 @@ ApplicationWindow {
     }
     SettingsPage {
         anchors.fill: parent; anchors.margins: 40
-        visible: currentPage === "Einstellungen"
+        visible: currentPage === "Einstellungen" && !window.playerVisible
         theme: colors; settings: appSettings
     }
+    PlayerPage {
+        anchors.fill: parent
+        visible: window.playerVisible
+        player: playback; theme: colors
+        fullscreen: window.visibility === Window.FullScreen
+        onCloseRequested: window.closePlayer()
+        onOpenRequested: videoFileDialog.open()
+        onFullscreenRequested: window.toggleFullscreen()
+    }
+    onClosing: playback.stop()
     footer: Label {
-        text: "VELUNO 0.1.0-dev · Technische Grundlage"
+        visible: !window.playerVisible && window.visibility !== Window.FullScreen
+        text: "VELUNO 0.1.0-dev · Lokale Wiedergabe"
         color: colors.muted; leftPadding: 28; bottomPadding: 16; font.pixelSize: 12
     }
 }

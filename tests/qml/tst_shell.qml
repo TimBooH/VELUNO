@@ -29,6 +29,33 @@ TestCase {
             compare(shell.currentPage, button.text)
         }
     }
+    function test_playerControlsAndOverlay() {
+        shell.playerVisible = true
+        playback.openFile(testInput.videoFixture)
+        tryCompare(playback, "loading", false, 10000)
+        verify(playback.active)
+        compare(playback.error, "")
+        let page = findChild(shell, "playerPage")
+        tryCompare(page, "overlayVisible", false, 4500)
+        mouseMove(page, page.width / 2, page.height / 2)
+        tryCompare(page, "overlayVisible", true)
+        mouseClick(findChild(shell, "pauseButton"))
+        tryCompare(playback, "paused", true)
+        wait(2100)
+        verify(page.overlayVisible)
+        let timeline = findChild(shell, "timeline")
+        mouseClick(timeline, timeline.width / 2, timeline.height / 2)
+        tryVerify(function() { return playback.position > 5 && playback.position < 9 })
+        testInput.pressKey(shell, Qt.Key_M)
+        tryCompare(playback, "muted", true)
+        testInput.pressKey(shell, Qt.Key_F)
+        tryCompare(shell, "visibility", Window.FullScreen)
+        testInput.pressKey(shell, Qt.Key_Escape)
+        tryCompare(shell, "visibility", Window.Windowed)
+        shell.closePlayer()
+        compare(playback.active, false)
+        compare(shell.playerVisible, false)
+    }
     function test_profileSettingsAndTheme() {
         let profile = findChild(shell, "profileButton")
         verify(profile !== null)

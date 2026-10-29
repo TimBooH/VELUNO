@@ -39,17 +39,17 @@ Die ausdrückliche Entwicklungsfreigabe vom 29.10.2026 ersetzt den Planungsstatu
 | COL-002 | Persönliche Sammlungen | Geplant; spätere Ausbaustufe / Abnahme |
 | COL-003 | Sammlungsordnung | Geplant; spätere Ausbaustufe / Abnahme |
 | COL-004 | Löschen ohne Medienverlust | Geplant; spätere Ausbaustufe / Abnahme |
-| PLY-001 | Integrierte Wiedergabe | Geplant; spätere Ausbaustufe / Abnahme |
-| PLY-002 | Player-Steuerung | Geplant; spätere Ausbaustufe / Abnahme |
+| PLY-001 | Integrierte Wiedergabe | Grundlegende lokale Wiedergabe integriert; Zielsystem-/Hardware-Abnahme offen |
+| PLY-002 | Player-Steuerung | Overlay mit 2-s-Ausblendung und ±10-s-Sprüngen implementiert und getestet |
 | PLY-003 | Fortsetzen und Gesehen-Status | Geplant; spätere Ausbaustufe / Abnahme |
 | PLY-004 | Versionspriorität | Geplant; spätere Ausbaustufe / Abnahme |
-| PLY-005 | Audio | Geplant; spätere Ausbaustufe / Abnahme |
-| PLY-006 | Untertitel | Geplant; spätere Ausbaustufe / Abnahme |
-| PLY-007 | Wiedergabegeschwindigkeit | Geplant; spätere Ausbaustufe / Abnahme |
+| PLY-005 | Audio | Sprachpräferenz, Lautstärke und Stumm umgesetzt; echte Audioausgabe/Gerätewahl offen |
+| PLY-006 | Untertitel | Neue Datei startet ohne Untertitel; Spurwechsel vorhanden, Gestaltung/externe Auswahl offen |
+| PLY-007 | Wiedergabegeschwindigkeit | 0,5×–2,0× implementiert; API-Grenzen getestet |
 | PLY-008 | Nächste Serienepisode | Geplant; spätere Ausbaustufe / Abnahme |
-| PLY-009 | Hardwarebeschleunigung | Geplant; spätere Ausbaustufe / Abnahme |
-| PLY-010 | Fehleranzeigen | Geplant; spätere Ausbaustufe / Abnahme |
-| PLY-011 | Tastatursteuerung | Geplant; spätere Ausbaustufe / Abnahme |
+| PLY-009 | Hardwarebeschleunigung | Automatische Decoderoption vorbereitet; Software-Renderbasis aktiv, GPU und manuelle Auswahl offen |
+| PLY-010 | Fehleranzeigen | Datei-/Codec-/Renderfehler mit Hinweisen sichtbar; zusätzliche Fehlerfälle später |
+| PLY-011 | Tastatursteuerung | Grundbelegung umgesetzt und teilweise per UI getestet; N/Neubelegung/Konfliktprüfung folgen |
 | WIZ-001 | Sechsstufiger Assistent | Geplant; spätere Ausbaustufe / Abnahme |
 | WIZ-002 | Optionale Schritte | Geplant; spätere Ausbaustufe / Abnahme |
 | WIZ-003 | Startseite während Scan | Geplant; spätere Ausbaustufe / Abnahme |
