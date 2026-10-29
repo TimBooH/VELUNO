@@ -81,3 +81,9 @@ Lokale Abschlussprüfung unter Debian 13 / Qt 6.8.2: alle vier CTest-Suiten best
 Die Tests verwenden ausschließlich generierte Testmedien und vergleichen Originaldateien per SHA-256. Fehlerfälle (fehlender Pfad, nicht lokale URL, beschädigtes Video) mit anschließender Erholung sowie wiederholtes Öffnen/Stoppen sind geprüft. Die QML-Suite prüft die Player-Bedienung und Overlay-Regeln zusätzlich zur bisherigen Navigation und Theme-Persistenz.
 
 Erster Player-CI-Lauf [40949224547](https://github.com/TimBooH/VELUNO/actions/runs/40949224547): Build, Controller-, Datenbank- und nativer Wayland-Bildtest bestanden unter Ubuntu 24.04 / Qt 6.4.2. Der QML-Test deckte auf, dass Qt 6.4 beim erstmaligen Hineinbewegen nur das MouseArea-Eintrittsereignis liefert. Das Overlay reagiert nun zusätzlich auf `onEntered`; das ist eine Korrektur der echten Bedienung, keine Abschwächung der Testprüfung.
+
+Abgeschlossener Player-CI-Nachweis: [Lauf 40949745517](https://github.com/TimBooH/VELUNO/actions/runs/40949745517) für `3f5db6f7c0eb0566c86527b24eead12d61a14254`, Ubuntu 24.04 / Qt 6.4.2 / libmpv-API 2.2. Alle vier Testsuiten bestanden; Programmstart, AppImage-Paketierung, isolierter Paketstart und Upload waren erfolgreich.
+
+[Player-Artefakt 12930812787](https://github.com/TimBooH/VELUNO/actions/runs/40949745517/artifacts/12930812787) enthält AppImage und Prüfsumme, ZIP-Größe 113.299.587 Bytes. Ablauf laut GitHub am 12.11.2026 um 21:35 Uhr Europe/Berlin. ZIP-SHA-256: `39de1fe2f95621958c48d065615377bfe184c36586a6be557aecf5c7de5ba1fc`. Das Paket wurde isoliert gestartet; die Wiedergabe echter Medien im AppImage auf CachyOS mit echten Audiogeräten steht noch zur Nutzerabnahme aus. AppStream-Metadaten und die bereits bekannten Actions-Laufzeithinweise bleiben nicht blockierende Distributionshinweise.
+
+Dieser Abschnitt wird mit einem reinen Dokumentationscommit `[skip ci]` ergänzt. `main` bleibt auf dem leeren Initial-Commit; es wurde kein GitHub-Release erstellt.

@@ -24,4 +24,4 @@ CPU-Last und erreichbare Bildrate hängen von Auflösung und Hardware ab. 4K/HDR
 - QML-Bedienung: echtes Klicken auf Pause und Zeitleiste, zwei Sekunden Overlay-Ausblendung, sichtbare Controls bei Pause, Stumm-Kürzel, Vollbild/Esc, Zurück/Stop; bisherige Navigation, Themes und Fenster bleiben geprüft.
 - Ton wird in den Controller-Tests über einen Null-Ausgang geprüft; das Render-Testvideo ist stumm. Echte PipeWire-/Audio-Geräte und hörbare Wiedergabe sind in der Cloud nicht geprüft.
 
-Die finalen lokalen und GitHub-Actions-Ergebnisse werden im Entwicklungsprotokoll ergänzt. Die KDE-/CachyOS-/HiDPI-Abnahme bleibt auf dem Zielsystem erforderlich.
+Finaler Nachweis: alle vier Testsuiten und Paketstart erfolgreich in [Actions-Lauf 40949745517](https://github.com/TimBooH/VELUNO/actions/runs/40949745517). [AppImage-Artefakt](https://github.com/TimBooH/VELUNO/actions/runs/40949745517/artifacts/12930812787). Details stehen im Entwicklungsprotokoll. Die KDE-/CachyOS-/HiDPI-Abnahme bleibt auf dem Zielsystem erforderlich.
