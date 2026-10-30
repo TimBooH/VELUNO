@@ -100,3 +100,15 @@ Während der Prüfung korrigiert: ein nuller QString verletzte die NOT-NULL-Diag
 Lokale Abschlussprüfung: C++-/QML-Build unter Qt 6.8.2 erfolgreich; alle fünf CTest-Suiten bestanden (`player`, `player_render`, `library`, `database`, `qml`), insgesamt 18,53 Sekunden. Der Wayland-Bildtest läuft mit Weston/Software-Compositor. Bibliothekstests nutzen synthetische 1920-/3840-Pixel-Medien, rekursive/überlappende Quellen, defekte/unklare Dateien, manuelle Korrektur, Pause/Fortsetzen/Neustart, Dateibeobachtung und simulierte Offline-/Rückkehrzustände; SHA-256 bestätigt unveränderte Medien. Die QML-Suite bedient Suche, Raster, Wiedergabe, Zuordnung und Assistenten. Screenshots zeigen ausschließlich synthetische Testeinträge.
 
 Offen: Onlineanbieter/Cover, vollständige Detailinformationen, Sprach-/Avatarwahl, Favoriten/Sammlungen, Fortschritt/Gesehen, Backups/Updates sowie GPU/HDR-Abnahme. Native KDE-Ordnerdialoge und D-Bus-Zustellung, physische Wechseldatenträger/Netzlaufwerke, große Bibliotheken und HiDPI sind in dieser Umgebung nicht auf dem Zielsystem getestet. Die entpackte lokale SDK-Umgebung meldet weiterhin fehlende importierte QML-Plugin-Targets; der erfolgreiche Lauf verwendet dynamische Plugins. Kein Hinweis wird als Zielsystemabnahme gewertet.
+
+Zusätzlich bestand der Programmstart mit Bibliotheksimport nativ unter Wayland (`platform: wayland`, ein erkannter Film, null Fehler, Exit 0), mit neuem Datenverzeichnis und Weston-Software-Compositor. Der entsprechende Offscreen-Importstart mit ebenfalls frischer Datenbank bestand ebenfalls. Eine anfangs ausgegebene Fontconfig-Meldung zur schreibgeschützten SDK-Cache-Umgebung verhinderte den Offscreen-Start nicht; mit explizitem schreibbarem Cache im Wayland-Test trat sie nicht auf.
+
+## Bibliotheks-CI und Unstable-Artefakt
+
+[Lauf 41069263260](https://github.com/TimBooH/VELUNO/actions/runs/41069263260) für Commit `021b99d37367c2220fd8c21601eb9a5ac02c69cc` bestand unter Ubuntu 24.04 / Qt 6.4.2: Build, alle fünf Testsuiten, Programmstart, AppImage-Paketierung, isolierter Import eines synthetischen Films mit dem paketierten ffprobe und Artefakt-Upload. Der Import meldete einen Film und null Fehler.
+
+[Artefakt 12984037864](https://github.com/TimBooH/VELUNO/actions/runs/41069263260/artifacts/12984037864) enthält AppImage und Prüfsumme; ZIP-Größe 115.111.600 Bytes. Aufbewahrung 14 Tage, Ablauf laut GitHub am 13.11.2026 um 14:12:15 UTC. ZIP-SHA-256: `c99067a5eeffc2da2a54b52daa57c3505cfb520298d66333af583a8bebc03057`.
+
+Nicht blockierende Paketierungshinweise bleiben: bereits bearbeitete ELF-Dateien werden nicht erneut gestrippt, AppStream-Metadaten fehlen und die Paketierungswerkzeuge melden veraltete Ausgabebezeichner; Actions meldet Node-API-Abkündigungen. Die isolierte Paketprüfung und der Upload bestanden. CachyOS/KDE, FUSE und reale Medien-/Hardware-Abnahme bleiben offen.
+
+`main` wurde remote als unveränderter leerer Initial-Commit `864b7861add9787915cb714fc7bdf1260167b606` geprüft. Es wurde kein GitHub-Release erstellt. Dieser Nachweis wird als reiner Dokumentationscommit mit `[skip ci]` ergänzt.
