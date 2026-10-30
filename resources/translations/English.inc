@@ -251,3 +251,5 @@
 {"Staffel auswählen","Choose season"},
 {"Standard: höchste Auflösung. Andere Versionen kannst du hier gezielt abspielen oder neu zuordnen.","Default: highest resolution. You can play or reassign other versions here."},
 {"Medien zurzeit nicht verfügbar. Prüfe das Laufwerk oder die Netzwerkverbindung.","Media currently unavailable. Check the drive or network connection."},
+{"Episoden","Episodes"},
+{"Schließen","Close"},

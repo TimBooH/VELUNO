@@ -232,3 +232,5 @@ Neue echte QML-Bedienprüfungen decken primäre Filmwiedergabe, lokal gewähltes
 Die Startseite bleibt unverändert ohne großen Hero-Banner (UI-003); dieser große Bildbereich gehört ausschließlich zur nun ausdrücklich gewünschten Titeldetailansicht. Beide Themes und DE/EN bleiben unterstützt. Reale TMDB-Zugänge, NAS, KDE/HiDPI und Hardwareabnahme bleiben weiterhin offen; bestehende Dialog-implicitWidth-Warnungen bei Sprachwechsel und die absichtliche Bildfehlerwarnung des Fallbacktests werden nicht als behoben ausgegeben. Entwicklung ausschließlich unstable, kein Release und keine Änderung an main.
 
 Lokaler Abschlusslauf nach den Kontrast-/Resize-Korrekturen: Neubau erfolgreich, alle acht CTest-Suiten bestanden in 32,29 Sekunden, QML darin 10,31 Sekunden. Dark-/Light-Titeldetails und Serienansicht im 980×600-Fenster visuell geprüft. Ubuntu-/AppImage-Nachweis folgt über Actions.
+
+Abschließender Übersetzungscheck ergänzt auch Episoden und Schließen auf Englisch. Der erste Actions-Lauf für die Detailansicht wartete zu diesem Zeitpunkt noch auf einen Runner; der folgende Quellstand enthält diese beiden Beschriftungen ebenfalls.
