@@ -204,6 +204,47 @@ TestCase {
         if (screenshotDirectory.length > 0)
             grabImage(shell.contentItem.parent).save(screenshotDirectory + "/profiles.png");
     }
+    function test_metadataSwitchAndTokenAreIndependent() {
+        shell.currentPage = "Einstellungen";
+        let settings = findChild(shell, "settingsPage");
+        settings.section = 1;
+        waitForRendering(shell.contentItem);
+        let toggle = findChild(shell, "tmdbEnabledSwitch");
+        let refresh = findChild(shell, "tmdbRefresh");
+        let token = findChild(shell, "tmdbToken");
+        let save = findChild(shell, "tmdbSaveToken");
+        verify(toggle !== null);
+        compare(toggle.checked, false);
+        verify(!refresh.enabled);
+        // Saving a token does not grant network consent.
+        token.text = "qml-test-token";
+        mouseClick(save);
+        compare(token.text, "");
+        verify(metadata.configured);
+        compare(toggle.checked, false);
+        mouseClick(toggle);
+        tryCompare(metadata, "enabled", true);
+        compare(library.onlineConsent, "granted");
+        verify(refresh.enabled);
+        mouseClick(toggle);
+        tryCompare(metadata, "enabled", false);
+        verify(!refresh.enabled);
+        verify(metadata.configured);
+        // Reopening settings retains the off state and leaves the token hidden.
+        shell.currentPage = "Startseite";
+        shell.currentPage = "Einstellungen";
+        compare(toggle.checked, false);
+        compare(token.text, "");
+        appSettings.theme = "light";
+        waitForRendering(shell.contentItem);
+        if (screenshotDirectory.length > 0)
+            grabImage(shell.contentItem.parent).save(screenshotDirectory + "/tmdb-settings-light.png");
+        appSettings.theme = "midnight";
+        waitForRendering(shell.contentItem);
+        if (screenshotDirectory.length > 0)
+            grabImage(shell.contentItem.parent).save(screenshotDirectory + "/tmdb-settings.png");
+        metadata.setToken("");
+    }
     function test_navigation() {
         let buttons = [];
         function collect(item) {

@@ -93,6 +93,65 @@ Item {
                     ColumnLayout {
                         width: parent.width
                         spacing: 18
+                        Label {
+                            text: qsTr("TMDB-Metadaten")
+                            color: settingsPage.theme.text
+                            font.weight: Font.DemiBold
+                        }
+                        Label {
+                            Layout.fillWidth: true
+                            text: qsTr("Beim Einschalten werden Film- und Serientitel an TMDB gesendet, um Beschreibungen, Bewertungen, Poster und Hintergründe abzurufen. Lokale Medien bleiben unverändert.")
+                            color: settingsPage.theme.muted
+                            wrapMode: Text.WordWrap
+                        }
+                        Switch {
+                            objectName: "tmdbEnabledSwitch"
+                            text: qsTr("TMDB-Metadaten")
+                            checked: metadata.enabled
+                            onToggled: metadata.enabled = checked
+                            Accessible.name: qsTr("TMDB-Metadaten ein- oder ausschalten")
+                        }
+                        Label {
+                            objectName: "tmdbState"
+                            Layout.fillWidth: true
+                            text: !metadata.enabled ? qsTr("Aus · Gespeicherte Metadaten und Cover bleiben offline verfügbar.") : metadata.configured ? qsTr("Ein · Automatischer Abruf ist aktiviert.") : qsTr("Ein · Für den Abruf bitte noch den TMDB-Zugang hinterlegen.")
+                            color: metadata.enabled ? settingsPage.theme.accent : settingsPage.theme.muted
+                            wrapMode: Text.WordWrap
+                        }
+                        Label {
+                            text: metadata.configured ? qsTr("TMDB-Zugang ist hinterlegt") : qsTr("Noch kein TMDB-Zugang hinterlegt")
+                            color: settingsPage.theme.muted
+                        }
+                        TextField {
+                            id: tmdbToken
+                            objectName: "tmdbToken"
+                            placeholderText: qsTr("TMDB API-Lesezugriffstoken (Bearer)")
+                            echoMode: TextInput.Password
+                            Layout.fillWidth: true
+                            Accessible.name: qsTr("TMDB API-Zugang")
+                        }
+                        RowLayout {
+                            Button {
+                                objectName: "tmdbSaveToken"
+                                text: qsTr("Zugang speichern")
+                                onClicked: {
+                                    metadata.setToken(tmdbToken.text);
+                                    tmdbToken.text = "";
+                                }
+                            }
+                            Button {
+                                objectName: "tmdbRefresh"
+                                text: qsTr("Metadaten aktualisieren")
+                                enabled: metadata.enabled && metadata.configured && !metadata.busy
+                                onClicked: metadata.refreshAll()
+                            }
+                        }
+                        Label {
+                            text: metadata.status
+                            color: settingsPage.theme.muted
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
                         FolderPanel {
                             Layout.fillWidth: true
                             theme: settingsPage.theme
@@ -102,49 +161,6 @@ Item {
                             text: qsTr("Medienordner während des Betriebs überwachen")
                             checked: library.monitoring
                             onToggled: library.monitoring = checked
-                        }
-                        Label {
-                            text: qsTr("Online-Metadaten")
-                            color: settingsPage.theme.text
-                            font.weight: Font.DemiBold
-                        }
-                        ComboBox {
-                            model: [qsTr("Offline verwenden"), qsTr("Online-Metadaten grundsätzlich erlauben")]
-                            currentIndex: library.onlineConsent === "undecided" ? -1 : library.onlineConsent === "granted" ? 1 : 0
-                            displayText: currentIndex < 0 ? "Bitte bewusst wählen" : currentText
-                            onActivated: library.setOnlineConsent(currentIndex === 1 ? "granted" : "denied")
-                            Accessible.name: qsTr("Metadatenfreigabe")
-                        }
-                        Label {
-                            text: metadata.configured ? "TMDB-Zugang ist hinterlegt" : "Noch kein TMDB-Zugang hinterlegt"
-                            color: settingsPage.theme.muted
-                        }
-                        TextField {
-                            id: tmdbToken
-                            placeholderText: qsTr("TMDB API-Lesezugriffstoken (Bearer)")
-                            echoMode: TextInput.Password
-                            Layout.fillWidth: true
-                            Accessible.name: qsTr("TMDB API-Zugang")
-                        }
-                        RowLayout {
-                            Button {
-                                text: qsTr("Zugang speichern")
-                                onClicked: {
-                                    metadata.setToken(tmdbToken.text);
-                                    tmdbToken.text = "";
-                                }
-                            }
-                            Button {
-                                text: qsTr("Metadaten aktualisieren")
-                                enabled: metadata.configured
-                                onClicked: metadata.refreshAll()
-                            }
-                        }
-                        Label {
-                            text: metadata.status
-                            color: settingsPage.theme.muted
-                            wrapMode: Text.WordWrap
-                            Layout.fillWidth: true
                         }
                         ScanPanel {
                             Layout.fillWidth: true

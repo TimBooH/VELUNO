@@ -4,6 +4,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QPointer>
 #include <QSysInfo>
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -16,6 +17,8 @@ class ApiServer : public QObject {
   public:
     QTcpServer server;
     QList<QByteArray> requests;
+    bool holdReplies = false;
+    QList<QPointer<QTcpSocket>> heldReplies;
     ApiServer() {
         connect(&server, &QTcpServer::newConnection, this, [this] {
             while (server.hasPendingConnections()) {
@@ -28,6 +31,10 @@ class ApiServer : public QObject {
                         return;
                     const auto line = bytes->split('\n').first();
                     requests.append(*bytes);
+                    if (holdReplies) {
+                        heldReplies.append(socket);
+                        return;
+                    }
                     QJsonObject data;
                     if (line.contains("/search/"))
                         data = {
@@ -115,6 +122,83 @@ class MetadataUpdateTest : public QObject {
                      .toString(),
                  QString("My title"));
         QVERIFY(!metadata.status().isEmpty());
+    }
+    void metadataSwitchPersistsCancelsAndRetainsOfflineData() {
+        QTemporaryDir dir;
+        Database db(dir.filePath("app/veluno.sqlite3"));
+        LibraryRepository repo(db);
+        QVERIFY(QDir().mkpath(dir.filePath("media")));
+        ScannedFile file;
+        file.sourceId = repo.addSource(dir.filePath("media"), "movie");
+        file.path = dir.filePath("media/Movie.mp4");
+        file.kind = "movie";
+        file.title = "Movie";
+        repo.record(file, "test");
+        const auto title = repo.file(file.path).value("title_id").toLongLong();
+        db.query("INSERT INTO media_details(title_id,provider_id,overview) VALUES(?,12,?)",
+                 {title, "Cached description"});
+        LibraryController library(db, false, false);
+        MpvEngine player(nullptr, true);
+        PersonalController personal(db, library, player);
+        ApiServer api;
+        QVERIFY(api.server.listen(QHostAddress::LocalHost));
+        const QUrl base(QString("http://127.0.0.1:%1").arg(api.server.serverPort()));
+        {
+            MetadataController metadata(db, library, personal, nullptr, base);
+            QVERIFY(!metadata.enabled());
+            metadata.setToken("test-token");
+            QVERIFY(metadata.configured());
+            QVERIFY(!metadata.enabled()); // Saving a token never opts in.
+            api.holdReplies = true;
+            metadata.setEnabled(true);
+            QCOMPARE(library.onlineConsent(), QString("granted"));
+            QVERIFY(metadata.enabled());
+            metadata.refreshTitle(title);
+            QTRY_COMPARE_WITH_TIMEOUT(api.requests.size(), 1, 5000);
+            QVERIFY(metadata.busy());
+            metadata.setEnabled(false);
+            QVERIFY(!metadata.enabled());
+            QTRY_VERIFY_WITH_TIMEOUT(!metadata.busy(), 3000);
+            QTRY_VERIFY_WITH_TIMEOUT(api.heldReplies.first().isNull() ||
+                                         api.heldReplies.first()->state() ==
+                                             QAbstractSocket::UnconnectedState,
+                                     3000);
+            // Disabling cancels both the active request and already queued lookups.
+            metadata.refreshAll();
+            metadata.refreshTitle(title);
+            metadata.search(title, "Movie");
+            QTest::qWait(700);
+            QCOMPARE(api.requests.size(), 1);
+            QCOMPARE(db.query("SELECT overview FROM media_details WHERE title_id=?", {title})
+                         .first()
+                         .toMap()
+                         .value("overview")
+                         .toString(),
+                     QString("Cached description"));
+            QVERIFY(metadata.configured());
+        }
+        // A reconstructed controller observes the persisted off state and token.
+        MetadataController restored(db, library, personal, nullptr, base);
+        QVERIFY(!restored.enabled());
+        QVERIFY(restored.configured());
+        api.holdReplies = false;
+        restored.setEnabled(true);
+        // Turning on triggers the existing automatic background fetch without another button.
+        QTRY_COMPARE_WITH_TIMEOUT(
+            db.query("SELECT overview FROM media_details WHERE title_id=?", {title})
+                .first()
+                .toMap()
+                .value("overview")
+                .toString(),
+            QString("Provider description"), 6000);
+        restored.setEnabled(false);
+        QCOMPARE(db.setting("online_consent"), QString("denied"));
+        library.setOnlineConsent("granted"); // Wizard and settings share one choice.
+        QVERIFY(restored.enabled());
+        restored.setEnabled(false);
+        db.query("PRAGMA query_only=ON");
+        restored.setEnabled(true);
+        QVERIFY(!restored.enabled()); // A failed save cannot silently enable requests.
     }
     void signedUpdatesRejectTamperingAndIncompatibleData() {
         auto *context = EVP_PKEY_CTX_new_id(EVP_PKEY_ED25519, nullptr);

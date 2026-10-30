@@ -44,7 +44,7 @@ Das Design wird über Profilmenü → Einstellungen → Allgemein gewählt und i
 
 Beim ersten Start den Einrichtungsassistenten durchlaufen und Film- oder Serienordner auswählen. Später sind Ordner über **Medienordner** oder **Profil → Einstellungen → Bibliothek** erreichbar. Scans laufen im Hintergrund und lassen sich pausieren. Unklare Dateinamen können unter **Nicht zugeordnet** korrigiert werden. Filmversionen und Serienepisoden sind über die Kacheln erreichbar. Die Suche oben durchsucht lokale Film-/Serientitel.
 
-Online-Metadaten und Cover sind nach ausdrücklicher Zustimmung und Hinterlegung eines eigenen TMDB-Lesezugriffstokens verfügbar. Manuelle Änderungen/Bilder bleiben geschützt. Details, Dateinamensmuster und Grenzen: [Lokale Bibliothek](docs/LIBRARY.md). Migrationen bis Schema 4 ergänzen persönliche Daten und Metadaten. Vor einer Migration wird ein konsistenter Update-Snapshot angelegt. Ältere Builds können neuere Schemastände nicht öffnen; Sicherung/Wiederherstellung ist unter Einstellungen erreichbar.
+Online-Metadaten und Cover sind nach Hinterlegung eines eigenen TMDB-Lesezugriffstokens verfügbar; der separate Schalter **TMDB-Metadaten** unter Einstellungen → Bibliothek schaltet den Abruf ausdrücklich ein/aus. Ausschalten erhält lokale Informationen und Cover. Manuelle Änderungen/Bilder bleiben geschützt. Details, Dateinamensmuster und Grenzen: [Lokale Bibliothek](docs/LIBRARY.md). Migrationen bis Schema 4 ergänzen persönliche Daten und Metadaten. Vor einer Migration wird ein konsistenter Update-Snapshot angelegt. Ältere Builds können neuere Schemastände nicht öffnen; Sicherung/Wiederherstellung ist unter Einstellungen erreichbar.
 
 ## SMB im Heimnetz
 

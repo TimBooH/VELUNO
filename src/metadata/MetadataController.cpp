@@ -58,7 +58,23 @@ MetadataController::~MetadataController() {
     m_imageThread.wait();
 }
 bool MetadataController::allowed() const {
-    return configured() && m_db.setting("online_consent") == "granted";
+    return configured() && enabled();
+}
+void MetadataController::setEnabled(bool value) {
+    const QString consent = value ? "granted" : "denied";
+    if (m_db.setting("online_consent") == consent)
+        return;
+    // One persisted choice is shared with the wizard; never grant consent merely
+    // because a token was entered. setupChanged cancels pending requests on opt-out.
+    m_library.setOnlineConsent(consent);
+    if (m_db.setting("online_consent") != consent) {
+        report("Die TMDB-Einstellung konnte nicht gespeichert werden.");
+        return;
+    }
+    report(!value ? "TMDB ausgeschaltet. Gespeicherte Informationen bleiben verfügbar."
+           : configured()
+               ? "TMDB eingeschaltet. Metadaten werden im Hintergrund ergänzt."
+               : "TMDB eingeschaltet. Bitte noch den API-Lesezugriffstoken hinterlegen.");
 }
 void MetadataController::report(const QString &error) {
     m_status = error;
@@ -114,13 +130,14 @@ void MetadataController::pump() {
     });
     connect(reply, &QNetworkReply::finished, this, [this, reply, work, generation] {
         m_replies.remove(reply);
-        const auto bytes = reply->readAll();
-        const auto status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-        reply->deleteLater();
         if (generation != m_generation || !allowed()) {
+            reply->deleteLater();
             emit changed();
             return;
         }
+        const auto bytes = reply->readAll();
+        const auto status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError || bytes.size() > 4 * 1024 * 1024) {
             m_pendingTitles.clear();
             if (status == 429) {
@@ -404,6 +421,11 @@ void MetadataController::image(qint64 title, const QString &kind, const QString 
     });
     connect(reply, &QNetworkReply::finished, this, [this, reply, generation, title, kind, remote] {
         m_replies.remove(reply);
+        if (generation != m_generation || !allowed()) {
+            reply->deleteLater();
+            emit changed();
+            return;
+        }
         const auto bytes = reply->readAll();
         const auto ok =
             reply->error() == QNetworkReply::NoError && bytes.size() <= 12 * 1024 * 1024;

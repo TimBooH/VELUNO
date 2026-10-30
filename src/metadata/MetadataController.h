@@ -14,6 +14,7 @@ class MetadataController final : public QObject {
     Q_PROPERTY(QVariantList images READ images NOTIFY changed)
     Q_PROPERTY(bool busy READ busy NOTIFY changed)
     Q_PROPERTY(bool configured READ configured NOTIFY changed)
+    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY changed)
     Q_PROPERTY(QString status READ status NOTIFY changed)
   public:
     MetadataController(Database &db, LibraryController &library, PersonalController &personal,
@@ -32,6 +33,10 @@ class MetadataController final : public QObject {
     bool configured() const {
         return !m_db.setting("tmdb_token").isEmpty();
     }
+    bool enabled() const {
+        return m_db.setting("online_consent") == "granted";
+    }
+    void setEnabled(bool enabled);
     QString status() const {
         return m_status;
     }

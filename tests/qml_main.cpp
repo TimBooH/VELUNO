@@ -110,8 +110,8 @@ class Setup : public QObject {
         m_personal =
             std::make_unique<veluno::PersonalController>(*m_database, *m_library, *m_player);
         m_backups = std::make_unique<veluno::BackupService>(*m_database, false);
-        m_metadata =
-            std::make_unique<veluno::MetadataController>(*m_database, *m_library, *m_personal);
+        m_metadata = std::make_unique<veluno::MetadataController>(
+            *m_database, *m_library, *m_personal, nullptr, QUrl("http://127.0.0.1:1"));
         m_updates = std::make_unique<veluno::UpdateService>(*m_database, *m_backups, false);
     }
     void qmlEngineAvailable(QQmlEngine *engine) {
