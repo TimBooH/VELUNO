@@ -178,3 +178,13 @@ Zusätzliche Abschlussprüfungen: Der begrenzte Programmstart mit tatsächlich g
 Der erste Gesamt-CI-Lauf [41102240308](https://github.com/TimBooH/VELUNO/actions/runs/41102240308) baute unter Qt 6.4.2 vollständig. Sieben Testsuiten bestanden; der Player-Einstellungstest erkannte einen von Ubuntus älterem libmpv abgewiesenen sub-border-style-Befehl. Deshalb entstand kein Artefakt.
 
 Die Implementierung fragt jetzt die tatsächliche option-info-Fähigkeit ab. Neuere Versionen verwenden die getrennte Stiloption; ältere wählen die Boxdarstellung über den Alpha-Wert von sub-back-color. Das entspricht dem offiziellen mpv-0.37-Quellcode in [sub/ass_mp.c](https://github.com/mpv-player/mpv/blob/v0.37.0/sub/ass_mp.c). Die Funktion bleibt vollständig erhalten; kein Test wurde übersprungen. Der Einstellungstest schaltet den Hintergrund jetzt ausdrücklich ein und aus und verlangt weiterhin einen fehlerfreien Player. Lokaler Neubau sowie Player-/Personal-/Backup-Tests bestanden nach der Korrektur.
+
+### Abschließender Actions-Nachweis des Gesamtfunktionsausbaus
+
+[Lauf 41104725560](https://github.com/TimBooH/VELUNO/actions/runs/41104725560) für `739e1f9307a2526b6551935ba0b0b50576df08ba` ist vollständig erfolgreich: Ubuntu 24.04 / Qt 6.4.2, Build, alle acht Testsuiten, begrenzter Programmstart, AppImage-Paketierung, isoliertes OpenSSL-TLS-Backend, synthetischer Medienimport (ein Film, null Fehler), geöffneter Ordnerdialog und Artefakt-Upload. Der zusätzliche Untertitelhintergrundtest besteht nun auch mit Ubuntus älterem libmpv.
+
+[Aktuelles Artefakt 13001525493](https://github.com/TimBooH/VELUNO/actions/runs/41104725560/artifacts/13001525493) enthält AppImage, SHA-256-Datei und build-info.json. ZIP-Größe 118.597.866 Bytes, Ablauf laut GitHub am 13.11.2026 um 19:14:32 Uhr Europe/Berlin. ZIP-SHA-256: `eb1b53535748fd9fa5f73b5cd7f6fa931a4565a5ecd320fabcbd1f5fe03b6a78`.
+
+Die noch gemeldeten statischen QML-Scannerhinweise betreffen Windows/macOS/iOS-Stile und das in C++ registrierte Veluno.Player; die echten Linux-Laufzeitprüfungen bestehen. Die bisherigen nicht blockierenden Paketierungs-/Actions-Hinweise gelten weiterhin. Echte TMDB-/Hosting-/NAS-/Audio-/GPU-/KWin-/HiDPI- und produktive Installationsabnahmen sind dadurch ausdrücklich nicht ersetzt. Der spätere Nutzerzugang und die dauerhafte signierte Updatequelle bleiben konfigurierte Voraussetzungen, keine vorgetäuschten Dienste.
+
+Es wurde ausschließlich unstable verändert. main bleibt beim freigegebenen leeren Initial-Commit `864b7861add9787915cb714fc7bdf1260167b606`. Kein GitHub-Release wurde erstellt; dieser reine Nachweiscommit verwendet [skip ci].
