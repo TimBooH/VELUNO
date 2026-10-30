@@ -62,6 +62,18 @@ int main(int argc, char **argv) {
         } else if (app.arguments().contains("--smoke-test")) {
             auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().first());
             if (!window) return 1;
+            if (app.arguments().contains("--smoke-dialog")) {
+                QTimer::singleShot(0, &engine, [&] {
+                    auto *dialog=engine.rootObjects().first()->findChild<QObject *>("mediaFolderPicker");
+                    if (!dialog || !QMetaObject::invokeMethod(dialog,"open")) { QCoreApplication::exit(2); return; }
+                    QTimer::singleShot(200, &app, [dialog] {
+                        const bool visible=dialog->property("visible").toBool();
+                        qInfo() << "Folder dialog smoke test:" << visible;
+                        if (!visible) { QCoreApplication::exit(2); return; }
+                        QMetaObject::invokeMethod(dialog,"reject");
+                    });
+                });
+            }
             QTimer::singleShot(800, window, &QWindow::close);
         }
         return app.exec();

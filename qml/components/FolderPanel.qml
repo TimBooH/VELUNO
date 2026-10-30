@@ -1,5 +1,7 @@
 import QtQuick
 import QtQuick.Controls
+// Required by Qt 6.4 FolderDialog fallback; explicit import also bundles it in AppImage.
+import Qt.labs.folderlistmodel
 import QtQuick.Dialogs
 import QtQuick.Layouts
 ColumnLayout {

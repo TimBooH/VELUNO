@@ -38,3 +38,6 @@ trap 'rm -rf "$smoke_dir"' EXIT
 mkdir -p "$smoke_dir/data" "$smoke_dir/cache" "$smoke_dir/media"
 ffmpeg -hide_banner -loglevel error -f lavfi -i color=c=blue:s=96x64:r=1:d=1 -frames:v 1 -an -c:v mpeg4 "$smoke_dir/media/Smoke.Movie.2020.mp4"
 env -u LD_LIBRARY_PATH -u QT_PLUGIN_PATH -u QML_IMPORT_PATH -u QML2_IMPORT_PATH XDG_DATA_HOME="$smoke_dir/data" XDG_CACHE_HOME="$smoke_dir/cache" QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software timeout 30s "./$OUTPUT" --smoke-test --smoke-scan "$smoke_dir/media"
+
+# Force loading Qt's folder picker implementation inside the isolated package too.
+env -u LD_LIBRARY_PATH -u QT_PLUGIN_PATH -u QML_IMPORT_PATH -u QML2_IMPORT_PATH XDG_DATA_HOME="$smoke_dir/data" XDG_CACHE_HOME="$smoke_dir/cache" QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software timeout 20s "./$OUTPUT" --smoke-test --smoke-dialog
