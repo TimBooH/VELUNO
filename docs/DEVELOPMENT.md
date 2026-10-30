@@ -138,3 +138,9 @@ Neue Netzwerksuite mit privatem D-Bus und nachgebildetem KIO-FUSE: URL-Validieru
 Testgrenze: In der Cloud fehlen `/dev/fuse`, eine KDE-Sitzung und Zugriff auf das Nutzer-NAS. Echter SMB-Transport, Authentifizierung und Netzwerkverlust während tatsächlicher NAS-Wiedergabe sind nicht abgenommen. Die neue Schnittstelle ist automatisiert getestet, kein behaupteter End-to-End-NAS-Nachweis. Netzwerk-Gerätesuche und eigene Passwortverwaltung sind nicht Teil dieses Fixes.
 
 Lokaler Abschlussstand: Build erfolgreich; alle sechs CTest-Suiten (`player`, `player_render`, `library`, `network`, `database`, `qml`) bestanden in 18,91 Sekunden. Der native Wayland-Bildtest nutzt weiterhin Weston/Software-Compositor. Der neue Netzwerkpfad wurde zusätzlich bis in den echten libmpv-Controller geprüft, dessen I/O im Test von einer lokalen Datei hinter dem simulierten Mount stammt.
+
+### Korrektur der lokalen Prüfung und des CI-Testaufbaus
+
+Der erste SMB-CI-Lauf [41089241970](https://github.com/TimBooH/VELUNO/actions/runs/41089241970) stoppte beim Kompilieren der Netzwerksuite: `MpvEngine(true)` übergab bool an den QObject-Elternparameter. Richtig ist `MpvEngine(nullptr,true)`. Dies betrifft den Testaufbau und ist kein Qt-Versionsunterschied.
+
+Die vorherige lokale Befehlsfolge stoppte nach dem Buildfehler nicht und führte alte Testprogramme aus. Die oben genannten 18,91 Sekunden belegen deshalb nicht die letzte Player-Test-Erweiterung. Das wird hier ausdrücklich korrigiert. Nach Korrektur des Konstruktors wurden Build und Tests mit `set -e` erneut ausgeführt: Neubau erfolgreich, alle sechs Testsuiten bestanden in 18,76 Sekunden, einschließlich des jetzt neu gebauten Netzwerk-/libmpv-Tests. Der Actions-Workflow hatte den Buildfehler korrekt erkannt und kein Artefakt erstellt.

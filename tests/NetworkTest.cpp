@@ -62,7 +62,7 @@ private slots:
         QCOMPARE(first(library.selectedFiles()).value("path").toString(),childLocation("smb://nas/Filme",relative.mid(1)));
         const auto unresolved=repo.file(childLocation("smb://nas/Filme",unknown.mid(1))); library.assignFile(unresolved.value("id").toLongLong(),"Mein Film",0,0,0);
         QSignalSpy playing(&library,&LibraryController::playRequested);
-        MpvEngine player(true);
+        MpvEngine player(nullptr,true);
         connect(&library,&LibraryController::playRequested,&player,&MpvEngine::openFile);
         library.playTitle(id); QVERIFY(library.networkBusy()); QTRY_COMPARE_WITH_TIMEOUT(playing.count(),1,5000);
         QCOMPARE(playing.first().first().toUrl(),QUrl::fromLocalFile(root+relative)); QVERIFY(!library.networkBusy());
