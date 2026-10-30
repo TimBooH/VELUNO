@@ -1,4 +1,5 @@
 #include "LibraryController.h"
+#include "platform/MediaLocation.h"
 #include <QFileInfo>
 #include <QRandomGenerator>
 #include <QDBusConnection>
@@ -88,9 +89,9 @@ void LibraryController::applySnapshot(const QVariantMap &snapshot) {
     }
     emit catalogChanged();
 }
-void LibraryController::addSource(const QUrl &url,const QString &kind) {
-    if (!url.isLocalFile()) { report("Bitte einen lokalen Ordner auswählen."); return; }
-    try { m_repository.addSource(url.toLocalFile(),kind); reload(); if (m_setupComplete || m_wizardStep>=4) scan(); } catch (const std::exception &e) { report(QString::fromUtf8(e.what())); }
+bool LibraryController::addSource(const QUrl &url,const QString &kind) {
+    if (!url.isLocalFile() && !isSmb(url.toString())) { report("Bitte einen lokalen Ordner oder eine SMB-Freigabe wählen."); return false; }
+    try { m_repository.addSource(url.isLocalFile() ? url.toLocalFile() : normalizedSmb(url).toString(QUrl::FullyEncoded),kind); reload(); if (m_setupComplete || m_wizardStep>=4) scan(); return true; } catch (const std::exception &e) { report(QString::fromUtf8(e.what())); return false; }
 }
 void LibraryController::removeSource(qint64 id) {
     if (m_busy) { report("Bitte den laufenden Scan zuerst abschließen lassen."); return; }
@@ -152,11 +153,28 @@ void LibraryController::playTitle(qint64 id) {
     if (m_selection.value("kind")=="series") return;
     if (!m_files.rows().isEmpty()) playFile(m_files.rows().first().toMap().value("path").toString());
 }
+void LibraryController::cancelPendingPlayback() {
+    ++m_playRequest;
+    if (m_networkBusy) { m_networkBusy=false; emit networkChanged(); }
+}
 void LibraryController::playFile(const QString &path) {
-    clearError();
+    cancelPendingPlayback(); clearError();
+    qint64 titleId=0;
+    for (const auto &row : m_files.rows()) if (row.toMap().value("path").toString()==path) { titleId=m_selection.value("id").toLongLong(); break; }
+    if (isSmb(path)) {
+        const auto request=m_playRequest;
+        m_networkBusy=true; emit networkChanged();
+        NetworkAccess::resolve(QUrl(path),this,[this,request,titleId](QString local,QString error) {
+            if (request!=m_playRequest) return;
+            m_networkBusy=false; emit networkChanged();
+            if (!error.isEmpty()) { report(error); return; }
+            emit playRequested(QUrl::fromLocalFile(local),true,titleId);
+        });
+        return;
+    }
     const QFileInfo file(path);
     if (!file.isFile() || !file.isReadable()) { report("Diese Version ist nicht verfügbar. Bitte Laufwerk prüfen oder eine andere Version wählen."); return; }
-    emit playRequested(QUrl::fromLocalFile(path));
+    emit playRequested(QUrl::fromLocalFile(path),false,titleId);
 }
 void LibraryController::assignFile(qint64 id,const QString &title,int year,int season,int episode) {
     try { m_repository.assign(id,title,year,season,episode); reload(); } catch (const std::exception &e) { report(QString::fromUtf8(e.what())); }

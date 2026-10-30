@@ -1,4 +1,5 @@
 #include "Scanner.h"
+#include "platform/MediaLocation.h"
 #include "FilenameParser.h"
 #include <QDir>
 #include <QFileInfo>
@@ -29,12 +30,12 @@ bool ScannerWorker::checkpoint() {
     while (m_paused && !m_cancel) m_condition.wait(&m_mutex);
     return !m_cancel;
 }
-bool ScannerWorker::probe(ScannedFile &file) {
+bool ScannerWorker::probe(ScannedFile &file,const QString &localPath) {
     auto executable=QCoreApplication::applicationDirPath()+"/ffprobe";
     if (!QFileInfo::exists(executable)) executable=QStandardPaths::findExecutable("ffprobe");
     if (executable.isEmpty()) { file.diagnostic="ffprobe wurde nicht gefunden. Bitte die FFmpeg-Installation prüfen."; return false; }
     QProcess process;
-    process.start(executable,{"-v","error","-select_streams","v:0","-show_entries","stream=width,height:format=duration","-of","json",file.path});
+    process.start(executable,{"-v","error","-select_streams","v:0","-show_entries","stream=width,height:format=duration","-of","json",localPath});
     int remaining=10000;
     while (process.state()!=QProcess::NotRunning) {
         if (!checkpoint()) { process.kill(); process.waitForFinished(1000); return false; }
@@ -60,7 +61,7 @@ void ScannerWorker::scan(qint64 onlySource) {
         m_database->setSetting("scan_state","running");
         const QString token=QUuid::createUuid().toString();
         const QSet<QString> extensions={"mkv","mp4","m4v","avi","mov","webm","mpeg","mpg","ts","m2ts","wmv","ogv"};
-        struct Candidate { QString path, root, kind; qint64 source; };
+        struct Candidate { QString path, root, kind, identity; qint64 source; };
         QList<Candidate> candidates;
         QList<qint64> completeRoots;
         QStringList watched;
@@ -70,25 +71,37 @@ void ScannerWorker::scan(qint64 onlySource) {
             if (!checkpoint()) break;
             const auto source=value.toMap(); const auto id=source.value("id").toLongLong();
             if (onlySource && id!=onlySource) continue;
-            const auto root=source.value("path").toString(), kind=source.value("kind").toString();
+            const auto identity=source.value("path").toString(), kind=source.value("kind").toString();
+            QString root=identity;
+            if (isSmb(identity)) {
+                emit progress(0,candidates.size(),identity);
+                QString error;
+                root=NetworkAccess::resolveForScan(QUrl(identity),m_cancel,error);
+                if (m_cancel) break;
+                if (root.isEmpty()) {
+                    m_repository->markSourceUnavailable(id);
+                    m_repository->error(id,identity,error,token); continue;
+                }
+            }
             if (!QFileInfo(root).isDir() || !QFileInfo(root).isReadable()) {
                 m_repository->markSourceUnavailable(id);
-                m_repository->error(id,root,"Ordner oder Laufwerk ist nicht verfügbar. Einträge bleiben erhalten.",token); continue;
+                m_repository->error(id,identity,"Ordner oder Laufwerk ist nicht verfügbar. Einträge bleiben erhalten.",token); continue;
             }
             QStringList pending{root}; bool complete=true;
             while (!pending.isEmpty() && checkpoint()) {
                 const auto directory=pending.takeLast();
-                if (!QFileInfo(directory).isReadable()) { complete=false; m_repository->error(id,directory,"Unterordner ist nicht lesbar. Zugriffsrechte prüfen.",token); continue; }
-                watched.append(directory);
+                if (!QFileInfo(directory).isReadable()) { complete=false; m_repository->error(id,isSmb(identity) ? childLocation(identity,QDir(root).relativeFilePath(directory)) : directory,"Unterordner ist nicht lesbar. Zugriffsrechte prüfen.",token); continue; }
+                if (!isSmb(identity)) watched.append(directory);
                 if (progressClock.elapsed()>50) { emit progress(0,candidates.size(),directory); progressClock.restart(); }
                 const auto entries=QDir(directory).entryInfoList(QDir::AllEntries|QDir::NoDotAndDotDot|QDir::Hidden,QDir::Name);
                 for (const auto &info : entries) {
                     if (!checkpoint()) break;
                     if (info.isDir()) { if (!info.isSymLink()) pending.append(info.absoluteFilePath()); continue; }
                     if (!info.isFile() || !extensions.contains(info.suffix().toLower())) continue;
-                    const auto path=info.canonicalFilePath();
-                    if (path.isEmpty() || discovered.contains(path)) continue;
-                    discovered.insert(path); candidates.append({path,root,kind,id});
+                    const auto path=isSmb(identity) ? info.absoluteFilePath() : info.canonicalFilePath();
+                    const auto key=isSmb(identity) ? childLocation(identity,QDir(root).relativeFilePath(path)) : path;
+                    if (path.isEmpty() || discovered.contains(key)) continue;
+                    discovered.insert(key); candidates.append({path,root,kind,key,id});
                 }
             }
             if (complete && !m_cancel) completeRoots.append(id);
@@ -99,7 +112,7 @@ void ScannerWorker::scan(qint64 onlySource) {
         for (const auto &candidate : candidates) {
             if (m_paused) emit snapshotReady(m_repository->snapshot());
             if (!checkpoint()) break;
-            auto file=parseFilename(candidate.path,candidate.root,candidate.kind); file.sourceId=candidate.source;
+            auto file=parseFilename(candidate.path,candidate.root,candidate.kind); file.sourceId=candidate.source; file.path=candidate.identity;
             const QFileInfo info(candidate.path);
             file.size=info.size(); file.modified=info.lastModified().toUTC().toString(Qt::ISODateWithMs);
             const auto previous=m_repository->file(file.path);
@@ -110,13 +123,13 @@ void ScannerWorker::scan(qint64 onlySource) {
             } else {
                 if (previous.value("size").toLongLong()==file.size && previous.value("modified").toString()==file.modified && previous.value("diagnostic").toString().isEmpty() && previous.value("width").toInt()>0) {
                     file.width=previous.value("width").toInt(); file.height=previous.value("height").toInt(); file.duration=previous.value("duration").toDouble();
-                } else probe(file);
+                } else probe(file,candidate.path);
                 if (m_cancel) break;
                 m_repository->record(file,token);
                 if (!file.diagnostic.isEmpty()) m_repository->error(file.sourceId,file.path,file.diagnostic,token);
             }
             ++checked;
-            if (checked==1 || checked==candidates.size() || progressClock.elapsed()>50) { emit progress(checked,candidates.size(),candidate.path); progressClock.restart(); }
+            if (checked==1 || checked==candidates.size() || progressClock.elapsed()>50) { emit progress(checked,candidates.size(),file.path); progressClock.restart(); }
             if (updates.elapsed()>400) { emit snapshotReady(m_repository->snapshot()); updates.restart(); }
         }
         if (!m_cancel) for (auto id : completeRoots) { m_repository->markMissing(id,token); m_repository->clearOldErrors(id,token); }

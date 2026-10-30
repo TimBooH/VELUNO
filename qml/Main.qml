@@ -20,6 +20,7 @@ ApplicationWindow {
     property var playingTitleId: 0
     property bool playerVisible: false
     function closePlayer() {
+        window.mediaLibrary.cancelPendingPlayback()
         playback.stop()
         playerVisible = false
         if (visibility === Window.FullScreen) showNormal()
@@ -32,7 +33,7 @@ ApplicationWindow {
         id: videoFileDialog
         title: "Videodatei öffnen"
         nameFilters: ["Videodateien (*.mkv *.mp4 *.m4v *.avi *.mov *.webm *.mpeg *.mpg *.ts *.m2ts *.wmv *.ogv)", "Alle Dateien (*)"]
-        onAccepted: { window.playingTitleId = 0; window.playerVisible = true; playback.openFile(selectedFile) }
+        onAccepted: { window.mediaLibrary.cancelPendingPlayback(); window.playingTitleId = 0; if (selectedFile.toString().toLowerCase().indexOf("smb:") === 0) window.mediaLibrary.playFile(selectedFile.toString()); else { window.playerVisible = true; playback.openFile(selectedFile) } }
     }
     Shortcut { sequence: "Ctrl+O"; onActivated: videoFileDialog.open() }
     Shortcut { sequence: "Space"; enabled: window.playerVisible; onActivated: playback.togglePause() }
@@ -189,7 +190,7 @@ ApplicationWindow {
     SetupWizard { theme: colors; library: window.mediaLibrary }
     Connections {
         target: window.mediaLibrary
-        function onPlayRequested(url) { window.playingTitleId = window.mediaLibrary.selectedTitle.id; window.playerVisible = true; playback.openFile(url) }
+        function onPlayRequested(url, network, titleId) { window.playingTitleId = titleId; window.playerVisible = true; playback.openFile(url, network) }
     }
     Dialog {
         parent: Overlay.overlay; anchors.centerIn: parent
@@ -199,10 +200,10 @@ ApplicationWindow {
         Label { width: parent.width; text: window.mediaLibrary.error; textFormat: Text.PlainText; wrapMode: Text.WordWrap; color: colors.text }
         onClosed: window.mediaLibrary.clearError()
     }
-    onClosing: playback.stop()
+    onClosing: { window.mediaLibrary.cancelPendingPlayback(); playback.stop() }
     footer: Label {
         visible: !window.playerVisible && window.visibility !== Window.FullScreen
-        text: window.mediaLibrary.busy ? (window.mediaLibrary.paused ? "Bibliotheksscan pausiert" : "Bibliotheksscan · " + window.mediaLibrary.checked + " Dateien geprüft") : window.mediaLibrary.status
+        text: window.mediaLibrary.networkBusy ? "SMB-Datei wird verbunden …" : window.mediaLibrary.busy ? (window.mediaLibrary.paused ? "Bibliotheksscan pausiert" : "Bibliotheksscan · " + window.mediaLibrary.checked + " Dateien geprüft") : window.mediaLibrary.status
         color: colors.muted; leftPadding: 28; bottomPadding: 16; font.pixelSize: 12
     }
 }

@@ -10,13 +10,13 @@ Benötigt: C++20-Compiler, CMake ≥ 3.22, Qt ≥ 6.4 (Core, Gui, Quick, QuickCo
 CachyOS/Arch:
 
 ```sh
-sudo pacman -S --needed base-devel cmake ninja qt6-base qt6-declarative qt6-wayland mpv ffmpeg weston
+sudo pacman -S --needed base-devel cmake ninja qt6-base qt6-declarative qt6-wayland mpv ffmpeg weston dbus-daemon
 ```
 
 Debian 13 / Ubuntu 24.04:
 
 ```sh
-sudo apt install build-essential cmake ninja-build pkg-config qt6-base-dev qt6-declarative-dev libqt6sql6-sqlite libmpv-dev qt6-wayland qml6-module-qtqml qml6-module-qtqml-models qml6-module-qtquick-shapes qml6-module-qt-labs-folderlistmodel qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-dialogs qml6-module-qtquick-layouts qml6-module-qtquick-window qml6-module-qtqml-workerscript qml6-module-qtquick-templates qml6-module-qttest ffmpeg weston
+sudo apt install build-essential cmake ninja-build pkg-config qt6-base-dev qt6-declarative-dev libqt6sql6-sqlite libmpv-dev qt6-wayland qml6-module-qtqml qml6-module-qtqml-models qml6-module-qtquick-shapes qml6-module-qt-labs-folderlistmodel qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-dialogs qml6-module-qtquick-layouts qml6-module-qtquick-window qml6-module-qtqml-workerscript qml6-module-qtquick-templates qml6-module-qttest ffmpeg weston dbus-daemon
 ```
 
 ```sh
@@ -45,6 +45,16 @@ Das Design wird über Profilmenü → Einstellungen → Allgemein gewählt und i
 Beim ersten Start den Einrichtungsassistenten durchlaufen und Film- oder Serienordner auswählen. Später sind Ordner über **Medienordner** oder **Profil → Einstellungen → Bibliothek** erreichbar. Scans laufen im Hintergrund und lassen sich pausieren. Unklare Dateinamen können unter **Nicht zugeordnet** korrigiert werden. Filmversionen und Serienepisoden sind über die Kacheln erreichbar. Die Suche oben durchsucht lokale Film-/Serientitel.
 
 Online-Metadaten und Cover werden noch nicht abgerufen. Die entsprechende Entscheidung wird ausdrücklich gespeichert. Details, Dateinamensmuster und Grenzen: [Lokale Bibliothek](docs/LIBRARY.md). Migration 2 aktualisiert bestehende Datenbanken; ältere Builds mit Schema 1 können sie anschließend nicht öffnen. Eine automatische Sicherung/Wiederherstellung folgt später.
+
+## SMB im Heimnetz
+
+Unter **Medienordner → SMB-Freigabe** eine Adresse wie `smb://NAS/Filme` eingeben. Auf CachyOS werden die Systempakete `kio-fuse` und `kio-extras` benötigt:
+
+```sh
+sudo pacman -S --needed kio-fuse kio-extras
+```
+
+Die Freigabe bei Bedarf zuerst in Dolphin öffnen und dort anmelden. Keine Zugangsdaten in die VELUNO-Adresse eintragen. VELUNO verbindet die Freigabe über KDE für Scan und Wiedergabe; automatische Netzwerksuche ist noch nicht vorhanden. [Details und Testgrenzen](docs/LIBRARY.md#smb-freigaben-auf-kde).
 
 ## Eine Datei abspielen
 

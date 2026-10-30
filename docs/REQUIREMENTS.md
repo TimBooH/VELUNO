@@ -17,12 +17,12 @@ Die ausdrückliche Entwicklungsfreigabe vom 29.10.2026 ersetzt den Planungsstatu
 | UI-005 | Zufällige Startseitenreihen | Stabile Zufallsreihen pro Sitzung für Filme und Serien umgesetzt |
 | UI-006 | Interaktive Poster und Detailseiten | Posterplatzhalter mit Hover/Play und Versions-/Episodendialog; Cover und vollständige Details offen |
 | UI-007 | Bibliotheksübersichten | Film-/Serienraster mit Titel/Jahr/Neu-Sortierung und Verfügbarkeitsfilter umgesetzt |
-| LIB-001 | Mehrere Medienordner | Mehrere Film-/Serienordner und sichere Deaktivierung umgesetzt |
+| LIB-001 | Mehrere Medienordner | Mehrere lokale und SMB-Film-/Serienordner über KDE, sichere Deaktivierung umgesetzt; echtes NAS ungetestet |
 | LIB-002 | Import und Beobachtung | Rekursiver Import, Startprüfung, Dateibeobachtung und 60-s-Rückfallprüfung umgesetzt; reale Mount-Abnahme offen |
 | LIB-003 | Automatische Erkennung | Lokale Namensheuristik inklusive SxxEyy umgesetzt; Anbieterzuordnung offen |
 | LIB-004 | Nicht zugeordnet | Unklare Dateien separat; manuelle Titel-/Jahr-/Episodenzuordnung umgesetzt |
 | LIB-005 | Mehrere Filmversionen | Mehrere Dateien pro Film mit echter Auflösung und Auswahl umgesetzt |
-| LIB-006 | Nicht verfügbare Laufwerke | Offline-Einträge erhalten und Wiederkehr erkannt; simuliert getestet |
+| LIB-006 | Nicht verfügbare Laufwerke | Offline-Einträge erhalten und Wiederkehr erkannt; simuliert getestet, auch über KIO-FUSE-Vertrag |
 | LIB-007 | Hintergrundscan | Worker-Scan, Fortschritt, inkrementelle Speicherung und Pause/Fortsetzen umgesetzt |
 | META-001 | Einwilligung zu Online-Abfragen | Ausdrückliche Entscheidung persistiert; noch keine Online-Abfragen |
 | META-002 | Automatische und manuelle Zuordnung | Geplant; spätere Ausbaustufe / Abnahme |

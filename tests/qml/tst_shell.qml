@@ -94,6 +94,13 @@ TestCase {
         mouseClick(next)
         compare(library.wizardStep, 2)
         waitForRendering(shell.contentItem)
+        mouseClick(findChild(wizard, "addSmbButton"))
+        let smbDialog = findChild(wizard, "smbSourceDialog")
+        tryCompare(smbDialog, "opened", true)
+        let smbAddress = findChild(wizard, "smbAddress")
+        smbAddress.text = "smb://NAS/Filme"
+        verify(findChild(wizard, "confirmSmbSource").enabled)
+        smbDialog.close()
         mouseClick(findChild(wizard, "addFolderButton"))
         let folderPicker = findChild(wizard, "mediaFolderPicker")
         verify(folderPicker !== null)

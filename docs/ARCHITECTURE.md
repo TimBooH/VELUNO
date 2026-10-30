@@ -11,6 +11,7 @@
 | scanner | Rekursive Discovery, Dateinamenparser und ffprobe auf eigenem QThread; Pause/Fortsetzen/Abbruch |
 | library | GUI-Controller, inkrementelle Listenmodelle, Sortier-/Filter-Proxies, Quellenbeobachtung |
 | metadata | Austauschbarer Providervertrag und expliziter Einwilligungszustand; kein Netzwerkclient |
+| platform | SMB-URL-Normalisierung, asynchrone KIO-FUSE-Verbindung über den Host-Sitzungsbus |
 | übrige Module | Reservierte Modulverzeichnisse mit dokumentierter Verantwortung |
 
 Der Scanner besitzt seine eigene DB-Verbindung auf dem Worker-Thread. Fortschritt und Snapshots erreichen die GUI über queued signals. Der Metadatenprovider bleibt ein Vertrag ohne Netzwerkimplementierung. Details: [LIBRARY.md](LIBRARY.md).
@@ -38,3 +39,5 @@ Leere Startseitenreihen werden ausgeblendet; ohne Bibliothek zeigt die Startseit
 Beim Abbau wird der Renderkontext auf seinem Worker freigegeben, bevor der Thread endet. Die geteilte Session bleibt bis danach erhalten; erst anschließend darf mpv beendet werden. Schließen und Navigation stoppen die Wiedergabe. Die numerische C-Locale wird nach der Qt-Anwendungsinitialisierung für libmpv hergestellt; Qt-Lokalisierung bleibt davon unabhängig.
 
 Voreinstellungen sind deutsche Audiospurpräferenz, Untertitel aus und `hwdec=auto-safe`. Die aktive Bildausgabe dieser Stufe ist jedoch Software-Rendering; daraus folgt keine Abnahme von Hardware-Decodierung oder GPU-/HDR-Ausgabe. Der direkte GPU-Pfad bleibt eine eigene offene Integrationsaufgabe. Für ihn wurden in dieser Umgebung schwarze Bilder/Rasterartefakte beobachtet; er ist nicht Teil dieses Builds.
+
+SMB-Quellen verwenden dieselben Bibliothekstabellen mit dauerhaften SMB-URLs. Der Scanner löst den Zugriff pro Durchlauf auf; die Wiedergabe verbindet pro Wunsch asynchron. Temporäre Mountpfade und Zugangsdaten werden nicht in VELUNO gespeichert. Siehe LIBRARY.md für Hostabhängigkeiten und Testgrenzen.

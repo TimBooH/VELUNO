@@ -1,4 +1,5 @@
 #include "LibraryRepository.h"
+#include "platform/MediaLocation.h"
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QSqlError>
@@ -25,9 +26,13 @@ QVariantList LibraryRepository::sources(bool enabledOnly) const {
 }
 qint64 LibraryRepository::addSource(const QString &path, const QString &kind) {
     if (kind != "movie" && kind != "series") throw std::runtime_error("Ungültige Ordnerkategorie.");
-    QFileInfo info(path);
-    if (!info.isDir() || !info.isReadable()) throw std::runtime_error("Ordner ist nicht lesbar oder nicht erreichbar.");
-    const auto canonical = info.canonicalFilePath();
+    QString canonical;
+    if (isSmb(path)) canonical=normalizedSmb(QUrl(path)).toString(QUrl::FullyEncoded);
+    else {
+        QFileInfo info(path);
+        if (!info.isDir() || !info.isReadable()) throw std::runtime_error("Ordner ist nicht lesbar oder nicht erreichbar.");
+        canonical=info.canonicalFilePath();
+    }
     for (const auto &value : sources()) {
         const auto source=value.toMap(); const auto other=source.value("path").toString();
         if (source.value("kind") != kind && (canonical == other || canonical.startsWith(other+"/") || other.startsWith(canonical+"/")))

@@ -11,6 +11,7 @@ ColumnLayout {
     spacing: 12
     RowLayout {
         ComboBox { id: category; model: ["Filme", "Serien"]; Accessible.name: "Kategorie des Medienordners" }
+        Button { objectName: "addSmbButton"; text: "SMB-Freigabe"; onClicked: smbDialog.open() }
         Button { objectName: "addFolderButton"; text: "Ordner hinzufügen"; onClicked: picker.open() }
     }
     Label {
@@ -38,6 +39,23 @@ ColumnLayout {
         }
     }
     Label { visible: library.sourceCount === 0; text: "Noch keine Medienordner ausgewählt."; color: theme.muted }
+    Dialog {
+        id: smbDialog
+        objectName: "smbSourceDialog"
+        parent: Overlay.overlay; anchors.centerIn: parent
+        width: Math.min(parent.width - 64,620)
+        title: "SMB-Freigabe hinzufügen"; modal: true
+        ColumnLayout {
+            anchors.fill: parent; spacing: 14
+            Label { text: "Adresse der Freigabe oder eines Unterordners"; color: panel.theme.text }
+            TextField { id: smbAddress; objectName: "smbAddress"; Layout.fillWidth: true; placeholderText: "smb://NAS/Filme"; Accessible.name: "SMB-Adresse"; selectByMouse: true }
+            Label { text: "Die Anmeldung übernimmt KDE. Falls nötig, öffne die Freigabe zuerst in Dolphin. Gib hier keine Zugangsdaten ein."; wrapMode: Text.WordWrap; Layout.fillWidth: true; color: panel.theme.muted }
+        }
+        footer: DialogButtonBox {
+            Button { text: "Abbrechen"; DialogButtonBox.buttonRole: DialogButtonBox.RejectRole; onClicked: smbDialog.close() }
+            Button { objectName: "confirmSmbSource"; text: "Hinzufügen"; enabled: smbAddress.text.trim().length > 0; onClicked: { if (panel.library.addSource(smbAddress.text.trim(),category.currentIndex === 0 ? "movie" : "series")) smbDialog.close() } }
+        }
+    }
     FolderDialog {
         id: picker
         objectName: "mediaFolderPicker"

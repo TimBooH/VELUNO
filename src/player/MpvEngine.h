@@ -43,7 +43,7 @@ public:
     void setVolume(double volume);
     void setMuted(bool muted);
     void setSpeed(double speed);
-    Q_INVOKABLE void openFile(const QUrl &url);
+    Q_INVOKABLE void openFile(const QUrl &url, bool resolvedNetworkFile=false);
     Q_INVOKABLE void togglePause();
     Q_INVOKABLE void seek(double seconds);
     Q_INVOKABLE void seekRelative(double seconds);

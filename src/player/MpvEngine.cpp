@@ -71,11 +71,13 @@ bool MpvEngine::setNumber(const char *name, double value) {
     if (result < 0) { fail(QString::fromUtf8(mpv_error_string(result))); return false; }
     return true;
 }
-void MpvEngine::openFile(const QUrl &url) {
+void MpvEngine::openFile(const QUrl &url, bool resolvedNetworkFile) {
     if (!m_renderFailure.isEmpty()) { fail(m_renderFailure); return; }
     if (!url.isLocalFile()) { fail("Bitte eine lokale Videodatei auswählen."); return; }
     const QFileInfo file(url.toLocalFile());
-    if (!file.exists() || !file.isFile() || !file.isReadable()) {
+    // KIO-FUSE stat may block on network loss. Let the mpv I/O thread report
+    // errors for already resolved network paths instead of statting on the GUI thread.
+    if (!resolvedNetworkFile && (!file.exists() || !file.isFile() || !file.isReadable())) {
         fail("Datei nicht lesbar. Prüfe Dateipfad, Zugriffsrechte und angeschlossene Laufwerke."); return;
     }
     m_pending = file.absoluteFilePath();

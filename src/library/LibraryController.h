@@ -19,6 +19,7 @@ class LibraryController final : public QObject {
     Q_PROPERTY(QAbstractItemModel *errors READ errors CONSTANT)
     Q_PROPERTY(QAbstractItemModel *selectedFiles READ selectedFiles CONSTANT)
     Q_PROPERTY(QVariantMap selectedTitle READ selectedTitle NOTIFY selectionChanged)
+    Q_PROPERTY(bool networkBusy READ networkBusy NOTIFY networkChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY scanChanged)
     Q_PROPERTY(bool paused READ paused NOTIFY scanChanged)
     Q_PROPERTY(int checked READ checked NOTIFY scanChanged)
@@ -72,12 +73,14 @@ public:
     int wizardStep() const { return m_wizardStep; }
     QString onlineConsent() const { return m_consent; }
     QString profileName() const { return m_profileName; }
-    Q_INVOKABLE void addSource(const QUrl &url,const QString &kind);
+    Q_INVOKABLE bool addSource(const QUrl &url,const QString &kind);
     Q_INVOKABLE void removeSource(qint64 id);
     Q_INVOKABLE void scan(qint64 sourceId=0);
     Q_INVOKABLE void togglePause();
     Q_INVOKABLE void openDetails(qint64 titleId);
     Q_INVOKABLE void playTitle(qint64 titleId);
+    bool networkBusy() const { return m_networkBusy; }
+    Q_INVOKABLE void cancelPendingPlayback();
     Q_INVOKABLE void playFile(const QString &path);
     Q_INVOKABLE void assignFile(qint64 id,const QString &title,int year,int season,int episode);
     Q_INVOKABLE QVariantList search(const QString &query) const;
@@ -92,6 +95,7 @@ public:
     void reload();
 signals:
     void ready();
+    void networkChanged();
     void catalogChanged();
     void selectionChanged();
     void scanChanged();
@@ -99,7 +103,7 @@ signals:
     void optionsChanged();
     void setupChanged();
     void detailsRequested();
-    void playRequested(const QUrl &url);
+    void playRequested(const QUrl &url, bool network=false, qint64 titleId=0);
     void scanCompleted(bool interrupted);
 private:
     void applySnapshot(const QVariantMap &snapshot);
@@ -122,6 +126,8 @@ private:
     int m_checked=0,m_total=0,m_tileSize=170,m_wizardStep=0;
     bool m_setupComplete=false;
     QString m_currentPath,m_status="Bereit",m_error,m_watchNotice,m_consent="undecided",m_profileName;
+    bool m_networkBusy=false;
+    quint64 m_playRequest=0;
     QVariantMap m_selection;
 };
 }

@@ -25,7 +25,7 @@ signals:
     void failed(const QString &message);
 private:
     bool checkpoint();
-    bool probe(ScannedFile &file);
+    bool probe(ScannedFile &file, const QString &localPath);
     QString m_path;
     std::unique_ptr<Database> m_database;
     std::unique_ptr<LibraryRepository> m_repository;
