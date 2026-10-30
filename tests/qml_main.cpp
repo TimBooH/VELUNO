@@ -9,6 +9,7 @@
 #include "player/VideoItem.h"
 #include "profiles/PersonalController.h"
 #include "updater/UpdateService.h"
+#include <QPainter>
 #include <QQmlContext>
 #include <QQmlEngine>
 #include <QQuickStyle>
@@ -45,6 +46,30 @@ class Setup : public QObject {
     }
     QUrl videoFixture() const {
         return QUrl::fromLocalFile(m_directory.filePath("ui-video.mp4"));
+    }
+    Q_INVOKABLE QString artworkFixture(int index) {
+        // Entirely synthetic test art; no provider or network access.
+        const QString relative = QString("images/test-artwork-%1.png").arg(index);
+        const QString path = m_directory.filePath("app/" + relative);
+        QDir().mkpath(QFileInfo(path).absolutePath());
+        QImage image(360, 540, QImage::Format_RGB32);
+        QPainter painter(&image);
+        QLinearGradient gradient(0, 0, 360, 540);
+        gradient.setColorAt(0, QColor::fromHsv((index * 47 + 195) % 360, 160, 110));
+        gradient.setColorAt(1, QColor("#060C18"));
+        painter.fillRect(image.rect(), gradient);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setPen(QPen(QColor::fromHsv((index * 47 + 195) % 360, 100, 235), 3));
+        for (int ring = 0; ring < 7; ++ring)
+            painter.drawEllipse(QPointF(180, 220), 35 + ring * 20, 35 + ring * 20);
+        painter.setPen(Qt::white);
+        painter.setFont(QFont("Sans Serif", 26, QFont::Bold));
+        painter.drawText(
+            QRect(24, 390, 312, 100), Qt::AlignCenter | Qt::TextWordWrap,
+            QStringList{"ORBIT", "NACHTZUG", "GEZEITEN", "FERNWEH", "LICHT", "MORGEN"}.at(index %
+                                                                                          6));
+        painter.end();
+        return image.save(path) ? relative : QString{};
     }
     Q_INVOKABLE void resetSetupForTests() {
         m_localization->setLanguage("de");

@@ -56,3 +56,9 @@ Automatisiert werden Profile/Isolation/Originaldateien, Filmfortschritt/90-Proze
 Nicht durch Cloudtests ersetzt werden: echte NAS-/KDE-Anmeldung, echte Audioausgabe und Geräte, Hardwaredecoder/GPU/HDR, KWin/HiDPI/Mehrschirm, echte TMDB-Zugänge, produktiv gehostete signierte Updatequelle und Austausch eines tatsächlich gestarteten AppImage auf Zielhardware. Marke, Anbieterbedingungen und Drittanbieterlizenzen bleiben vor Stable freizugeben. Eine Vollständigkeitsbehauptung für alle Zielsystemabnahmen wäre deshalb falsch.
 
 Die begrenzten Paket-Smoke-Tests nutzen absichtlich einen mpv-Null-Audioausgang und prüfen keine physischen Geräte. Die normale Anwendung enumeriert die tatsächlichen Geräte. Das native Video-Renderverfahren wird separat in player_render mit libmpv geprüft.
+
+## Startseite und Coverdarstellung
+
+Die Startseite verwendet rahmenlose 2:3-Poster und 16:9-Weiterschauen-Kacheln, mit Reihenpfeilen, Hover-Wiedergabe und Fortschrittsbalken. Gemäß UI-003 gibt es keinen großen Hero-Banner. Ohne Cover wird der vollständige Titel als Ersatz angezeigt, kein einzelner Buchstabe. Ein defekter Bildcache verhindert die Bedienung nicht.
+
+Fehlende Cover: **Cover einrichten → Einstellungen/Bibliothek** führt zur ausdrücklichen Online-Freigabe und zum eigenen TMDB-Lesezugriffstoken. Anschließend Metadaten aktualisieren; mehrdeutige Titel über die Titeldetails zuordnen. Eigene Poster/Hintergründe lassen sich ohne Onlineabruf wählen. Die App bringt keine vorinstallierten kommerziellen Filmcover mit. Die untere Scanstatuszeile öffnet denselben Bibliotheksbereich mit konkreten Scanfehlern und Wiederholen. Die Gestaltung allein repariert keine unerreichbaren NAS-Dateien oder falschen Dateinamen.

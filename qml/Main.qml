@@ -6,7 +6,6 @@ import "themes"
 import "components"
 import "pages"
 import "player"
-import "components"
 import "wizard"
 
 ApplicationWindow {
@@ -143,18 +142,18 @@ ApplicationWindow {
     palette.placeholderText: colors.muted
     header: Rectangle {
         color: colors.background
-        height: visible ? 88 : 0
+        height: visible ? 76 : 0
         visible: window.visibility !== Window.FullScreen
         Rectangle {
             anchors.bottom: parent.bottom
             width: parent.width
             height: 1
-            color: colors.border
+            color: colors.surface
         }
         RowLayout {
             anchors.fill: parent
-            anchors.leftMargin: 28
-            anchors.rightMargin: 28
+            anchors.leftMargin: 40
+            anchors.rightMargin: 40
             spacing: 6
             Label {
                 text: qsTr("VELUNO")
@@ -162,7 +161,7 @@ ApplicationWindow {
                 font.weight: Font.Bold
                 font.letterSpacing: 2
                 color: colors.accent
-                Layout.rightMargin: 20
+                Layout.rightMargin: 22
             }
             Repeater {
                 model: window.navigation
@@ -184,6 +183,13 @@ ApplicationWindow {
                 id: globalSearch
                 Layout.preferredWidth: Math.max(140, Math.min(220, window.width - 860))
                 placeholderText: qsTr("Filme und Serien suchen")
+                leftPadding: 14
+                background: Rectangle {
+                    radius: 18
+                    color: globalSearch.activeFocus ? colors.raised : colors.surface
+                    border.width: globalSearch.activeFocus ? 1 : 0
+                    border.color: colors.accent
+                }
                 objectName: "globalSearch"
                 property var matches: []
                 Accessible.name: qsTr("Filme und Serien durchsuchen")
@@ -249,6 +255,7 @@ ApplicationWindow {
             }
             Button {
                 id: profileButton
+                flat: true
                 objectName: "profileButton"
                 text: window.mediaLibrary.profileName.slice(0, 1).toUpperCase() + "  ▾"
                 Accessible.name: qsTr("Profilmenü: ") + window.mediaLibrary.profileName
@@ -327,6 +334,7 @@ ApplicationWindow {
     }
     LibraryPage {
         personal: window.personalData
+        metadata: window.metadataService
         anchors.fill: parent
         anchors.margins: 40
         theme: colors
@@ -460,12 +468,25 @@ ApplicationWindow {
         window.mediaLibrary.cancelPendingPlayback();
         playback.stop();
     }
-    footer: Label {
+    footer: ItemDelegate {
+        objectName: "scanStatusButton"
+        height: visible ? 36 : 0
+        onClicked: {
+            window.currentPage = "Einstellungen";
+            settingsPage.section = 1;
+        }
+        Accessible.name: qsTr("Scanstatus und Fehler anzeigen")
         visible: !window.playerVisible && window.visibility !== Window.FullScreen
         text: window.mediaLibrary.networkBusy ? "SMB-Datei wird verbunden …" : window.mediaLibrary.busy ? (window.mediaLibrary.paused ? "Bibliotheksscan pausiert" : "Bibliotheksscan · " + window.mediaLibrary.checked + " Dateien geprüft") : window.mediaLibrary.status
-        color: colors.muted
-        leftPadding: 28
-        bottomPadding: 16
-        font.pixelSize: 12
+        leftPadding: 40
+        rightPadding: 40
+        font.pixelSize: 11
+        contentItem: Label {
+            text: parent.text + "  ›"
+            color: colors.muted
+            elide: Text.ElideRight
+            verticalAlignment: Text.AlignVCenter
+        }
+        background: Item {}
     }
 }

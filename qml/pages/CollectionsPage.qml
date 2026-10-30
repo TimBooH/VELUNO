@@ -122,12 +122,12 @@ ColumnLayout {
         clip: true
         model: personal.collectionTitles
         cellWidth: library.tileSize + 18
-        cellHeight: library.tileSize * 1.68 + 18
+        cellHeight: library.tileSize * 1.5 + 70
         ScrollBar.vertical: ScrollBar {}
         delegate: PosterCard {
             theme: page.theme
             width: page.library.tileSize
-            height: width * 1.68
+            height: width * 1.5 + 52
             onDetailsRequested: page.library.openDetails(entry.id)
             onPlayRequested: page.library.playTitle(entry.id)
         }

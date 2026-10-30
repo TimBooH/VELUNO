@@ -7,6 +7,7 @@ Item {
     id: page
     required property QtObject theme
     required property QtObject personal
+    required property QtObject metadata
     required property QtObject library
     property string pageTitle: "Startseite"
     property string description: "Deine Filme und Serien. An einem Ort."
@@ -27,6 +28,7 @@ Item {
         anchors.fill: parent
         spacing: 14
         RowLayout {
+            visible: page.pageTitle !== "Startseite" || library.movieCount + library.seriesCount === 0
             Layout.fillWidth: true
             Label {
                 text: qsTr(pageTitle)
@@ -45,6 +47,7 @@ Item {
             }
         }
         Label {
+            visible: page.pageTitle !== "Startseite" || library.movieCount + library.seriesCount === 0
             text: qsTr(description)
             color: theme.muted
             font.pixelSize: 15
@@ -99,6 +102,23 @@ Item {
                 onClicked: page.showUnassigned = !page.showUnassigned
             }
         }
+        RowLayout {
+            visible: page.pageTitle === "Startseite" && library.movieCount + library.seriesCount > 0 && (!page.metadata.configured || library.onlineConsent !== "granted")
+            Layout.fillWidth: true
+            spacing: 12
+            Label {
+                Layout.fillWidth: true
+                text: qsTr("Cover fehlen? Online-Metadaten einrichten oder eigene Bilder in den Titeldetails wählen.")
+                color: page.theme.muted
+                font.pixelSize: 12
+                wrapMode: Text.WordWrap
+            }
+            ToolButton {
+                objectName: "configureArtwork"
+                text: qsTr("Cover einrichten") + "  ›"
+                onClicked: page.foldersRequested()
+            }
+        }
         Label {
             visible: library.busy
             text: library.paused ? "Bibliotheksscan pausiert" : "Bibliothek wird im Hintergrund ergänzt · " + library.checked + " Dateien geprüft"
@@ -111,7 +131,7 @@ Item {
             contentWidth: availableWidth
             ColumnLayout {
                 width: parent.width
-                spacing: 24
+                spacing: 22
                 ContinueShelf {
                     theme: page.theme
                     personal: page.personal
@@ -119,21 +139,21 @@ Item {
                 PosterShelf {
                     theme: page.theme
                     model: library.recent
-                    heading: "Zuletzt hinzugefügt"
+                    heading: qsTr("Zuletzt hinzugefügt")
                     onDetailsRequested: library.openDetails(id)
                     onPlayRequested: library.playTitle(id)
                 }
                 PosterShelf {
                     theme: page.theme
                     model: library.randomMovies
-                    heading: "Meine Filme"
+                    heading: qsTr("Meine Filme")
                     onDetailsRequested: library.openDetails(id)
                     onPlayRequested: library.playTitle(id)
                 }
                 PosterShelf {
                     theme: page.theme
                     model: library.randomSeries
-                    heading: "Meine Serien"
+                    heading: qsTr("Meine Serien")
                     onDetailsRequested: library.openDetails(id)
                     onPlayRequested: library.playTitle(id)
                 }
@@ -155,13 +175,13 @@ Item {
             Layout.fillHeight: true
             clip: true
             cellWidth: library.tileSize + 18
-            cellHeight: library.tileSize * 1.68 + 18
+            cellHeight: library.tileSize * 1.5 + 70
             model: pageTitle === "Favoriten" ? personal.favorites : page.kind === "movie" ? library.movies : library.series
             ScrollBar.vertical: ScrollBar {}
             delegate: PosterCard {
                 theme: page.theme
                 width: page.library.tileSize
-                height: width * 1.68
+                height: width * 1.5 + 52
                 onDetailsRequested: page.library.openDetails(entry.id)
                 onPlayRequested: page.library.playTitle(entry.id)
             }
