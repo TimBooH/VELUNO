@@ -20,6 +20,7 @@ Database::Database(const QString &path) : m_connection(QUuid::createUuid().toStr
             throw std::runtime_error("SQLite-Konsistenzprüfung fehlgeschlagen.");
         check.finish();
         migrate(m_db, schemaMigrations());
+        execute(m_db, "PRAGMA journal_mode=WAL");
     } catch (...) {
         m_db.close(); m_db = {}; QSqlDatabase::removeDatabase(m_connection); throw;
     }

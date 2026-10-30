@@ -1,5 +1,3 @@
 # library
 
-Gemeinsame Filme, Serien, Episoden und Dateiversionen; nächste Ausbaustufe.
-
-Dieser reservierte Modulort enthält noch keine ausführbare Fachlogik.
+LibraryController verbindet Quellenverwaltung, Worker-Scanner, inkrementelle Modelle und QML. CatalogProxy sortiert/filtert Titel; EntryModel bewahrt Zeilenidentität bei Änderungen. SQL liegt in database/LibraryRepository, Medienanalyse in scanner, Wiedergabe in player. Siehe [LIBRARY.md](../../docs/LIBRARY.md).

@@ -13,6 +13,7 @@ public:
     void setSetting(const QString &key, const QString &value);
     QString path() const { return m_db.databaseName(); }
 private:
+    friend class LibraryRepository;
     QString m_connection;
     QSqlDatabase m_db;
 };

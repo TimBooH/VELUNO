@@ -9,6 +9,7 @@ TestCase {
     Component { id: appComponent; App.Main {} }
     property var shell
     function init() {
+        testInput.resetSetupForTests()
         appSettings.theme = "midnight"
         shell = appComponent.createObject(null)
         verify(shell !== null)
@@ -16,6 +17,99 @@ TestCase {
         wait(30)
     }
     function cleanup() { shell.close(); shell.destroy(); shell = null }
+    function test_catalogImportDetailsSearchAndAssignment() {
+        library.addSource(testInput.libraryFolder, "movie")
+        tryCompare(library, "movieCount", 1, 10000)
+        tryCompare(library, "busy", false, 10000)
+        compare(library.unassignedCount, 1)
+        let matches = library.search("Example")
+        compare(matches.length, 1)
+        shell.currentPage = "Filme"
+        let grid = findChild(shell, "movieGrid")
+        tryCompare(grid, "count", 1)
+        wait(100)
+        grid.forceLayout()
+        let card = grid.itemAtIndex(0)
+        if (screenshotDirectory.length > 0) grabImage(shell.contentItem.parent).save(screenshotDirectory + "/library-debug.png")
+        verify(card !== null)
+        mouseClick(card, 20, 20)
+        let detail = findChild(shell, "titleDetails")
+        tryCompare(detail, "opened", true)
+        compare(library.selectedTitle.title, "Example Movie")
+        detail.close()
+        let search = findChild(shell, "globalSearch")
+        search.forceActiveFocus()
+        search.text = "Example"
+        compare(search.matches.length, 1)
+        let results = findChild(shell, "searchResults")
+        let popup = findChild(shell, "searchPopup")
+        tryCompare(popup, "opened", true)
+        results.forceLayout()
+        let result = results.itemAtIndex(0)
+        verify(result !== null)
+        mouseMove(result, 20, 20)
+        mouseClick(result)
+        tryCompare(detail, "opened", true)
+        detail.close()
+        search.text = ""
+        library.playTitle(matches[0].id)
+        tryCompare(shell, "playerVisible", true)
+        tryCompare(playback, "loading", false, 10000)
+        verify(playback.active)
+        shell.closePlayer()
+        mouseClick(findChild(shell, "unassignedToggle"))
+        wait(100)
+        let unknownList = findChild(shell, "unassignedList")
+        unknownList.forceLayout()
+        let assign = findChild(unknownList.itemAtIndex(0), "assign-file-" + testInput.unknownFileId)
+        verify(assign !== null)
+        mouseClick(assign)
+        let assignment = findChild(shell, "assignmentDialog")
+        tryCompare(assignment, "opened", true)
+        let title = findChild(shell, "assignmentTitle")
+        compare(title.text, "")
+        title.text = "Own Movie"
+        mouseClick(assignment.standardButton(Dialog.Ok))
+        tryCompare(library, "unassignedCount", 0)
+        compare(library.movieCount, 2)
+        library.setOptions("movie", "title", 0)
+        tryCompare(grid, "count", 0)
+        compare(findChild(shell, "availabilityFilter").currentIndex, 2)
+        library.setOptions("movie", "title", -1)
+        tryCompare(grid, "count", 2)
+        if (screenshotDirectory.length > 0) {
+            mouseClick(findChild(shell, "unassignedToggle"))
+            waitForRendering(shell.contentItem)
+            grabImage(shell.contentItem.parent).save(screenshotDirectory + "/library.png")
+        }
+    }
+    function test_wizardRequiresMetadataDecision() {
+        testInput.restartSetupForTests()
+        let wizard = findChild(shell, "setupWizard")
+        tryCompare(wizard, "opened", true)
+        let next = findChild(shell, "wizardNext")
+        compare(library.wizardStep, 0)
+        mouseClick(next)
+        compare(library.wizardStep, 1)
+        mouseClick(next)
+        compare(library.wizardStep, 2)
+        mouseClick(next)
+        compare(library.wizardStep, 3)
+        verify(!next.enabled)
+        waitForRendering(shell.contentItem)
+        let offline = findChild(shell, "offlineChoice")
+        if (screenshotDirectory.length > 0) grabImage(shell.contentItem.parent).save(screenshotDirectory + "/wizard-debug.png")
+        mouseClick(offline)
+        compare(library.onlineConsent, "denied")
+        verify(next.enabled)
+        mouseClick(next)
+        compare(library.wizardStep, 4)
+        mouseClick(next)
+        compare(library.wizardStep, 5)
+        mouseClick(next)
+        tryCompare(library, "setupComplete", true)
+        tryCompare(wizard, "opened", false)
+    }
     function test_navigation() {
         let buttons = []
         function collect(item) {
@@ -79,6 +173,7 @@ TestCase {
             waitForRendering(shell.contentItem)
             grabImage(shell.contentItem.parent).save(screenshotDirectory + "/light.png")
         }
+        testInput.resetSetupForTests()
         appSettings.theme = "midnight"
         compare(shell.color, "#0b1426")
         if (screenshotDirectory.length > 0) {

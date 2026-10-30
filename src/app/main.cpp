@@ -8,6 +8,7 @@
 #include <QTimer>
 #include <QDebug>
 #include "core/AppSettings.h"
+#include "library/LibraryController.h"
 #include "player/MpvEngine.h"
 #include "player/VideoItem.h"
 #include <QSGRendererInterface>
@@ -33,15 +34,32 @@ int main(int argc, char **argv) {
         });
         qmlRegisterUncreatableType<veluno::MpvEngine>("Veluno.Player", 1, 0, "Playback", "Provided by the application");
         qmlRegisterType<veluno::VideoItem>("Veluno.Player", 1, 0, "VideoView");
+        const int scanArgument = app.arguments().indexOf("--smoke-scan");
+        const bool scanSmoke = app.arguments().contains("--smoke-test") && scanArgument >= 0;
+        veluno::LibraryController library(database,!scanSmoke,!scanSmoke);
         QQmlApplicationEngine engine;
         engine.rootContext()->setContextProperty("appSettings", &settings);
         engine.rootContext()->setContextProperty("playback", &player);
+        engine.rootContext()->setContextProperty("library", &library);
         engine.load(QUrl("qrc:/qml/Main.qml"));
         if (engine.rootObjects().isEmpty()) return 1;
         qInfo() << "VELUNO ready; platform:" << QGuiApplication::platformName()
                 << "database:" << path << "mpv API:" << player.apiVersion();
         // Bounded startup verification used by CI; close through the real window.
-        if (app.arguments().contains("--smoke-test")) {
+        if (scanSmoke) {
+            if (scanArgument + 1 >= app.arguments().size()) return 2;
+            QObject::connect(&library,&veluno::LibraryController::scanCompleted,&app,[&](bool interrupted) {
+                const bool success = !interrupted && library.movieCount()>0 && library.errorCount()==0;
+                qInfo() << "Library scan smoke test:" << success << "movies:" << library.movieCount() << "errors:" << library.errorCount();
+                QCoreApplication::exit(success ? 0 : 2);
+            });
+            QObject::connect(&library,&veluno::LibraryController::errorChanged,&app,[&] {
+                if (!library.error().isEmpty()) { qCritical().noquote() << library.error(); QCoreApplication::exit(2); }
+            });
+            QTimer::singleShot(20000,&app,[]{ QCoreApplication::exit(3); });
+            const auto folder=QUrl::fromLocalFile(app.arguments().at(scanArgument+1));
+            QTimer::singleShot(0,&library,[&,folder]{ library.addSource(folder,"movie"); library.scan(); });
+        } else if (app.arguments().contains("--smoke-test")) {
             auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().first());
             if (!window) return 1;
             QTimer::singleShot(800, window, &QWindow::close);

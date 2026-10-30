@@ -1,22 +1,23 @@
 # Architektur der technischen Grundlage
 
-`src/app` verdrahtet den Lebenszyklus. QML kennt `AppSettings` und den Playback-Controller `MpvEngine`, keine SQL-Verbindung oder rohen mpv-Handles. Das reguläre ApplicationWindow nutzt Systemdekorationen und erzwingt weder X11 noch rahmenloses Fensterverhalten. Qt wählt das Plattform-Backend aus der Desktop-Sitzung.
+`src/app` verdrahtet den Lebenszyklus. QML kennt `AppSettings` und den Playback-Controller `MpvEngine` sowie `LibraryController`, keine SQL-Verbindung oder rohen mpv-Handles. Das reguläre ApplicationWindow nutzt Systemdekorationen und erzwingt weder X11 noch rahmenloses Fensterverhalten. Qt wählt das Plattform-Backend aus der Desktop-Sitzung.
 
 | Schicht | Verantwortung / aktueller Umfang |
 | --- | --- |
-| qml | Feste obere Navigation, leere Bibliotheksseiten, Profilmenü, Einstellungen, Dark/Light-Farben |
+| qml | Feste obere Navigation, Bibliotheksraster, Suche, Assistent, Profilmenü, Einstellungen, Dark/Light-Farben |
 | core | Theme-Auswahl, Persistenzfehler mit Rückmeldung an die Oberfläche |
 | database | Verbindungslebenszyklus, gebundene SQL-Parameter, SQLite-Migrationen |
 | player | libmpv-Lebenszyklus, asynchrone Wiedergabebefehle, Eventverarbeitung und getrennte Videoausgabe auf einem Worker-Thread |
-| scanner | Schnittstelle für Start/Pause/Fortsetzen/Abbruch; keine Dateizugriffe |
+| scanner | Rekursive Discovery, Dateinamenparser und ffprobe auf eigenem QThread; Pause/Fortsetzen/Abbruch |
+| library | GUI-Controller, inkrementelle Listenmodelle, Sortier-/Filter-Proxies, Quellenbeobachtung |
 | metadata | Austauschbarer Providervertrag und expliziter Einwilligungszustand; kein Netzwerkclient |
 | übrige Module | Reservierte Modulverzeichnisse mit dokumentierter Verantwortung |
 
-Scanner- und Metadatenimplementierungen werden später auf Worker-Threads ausgeführt. Fortschritt und Ergebnisse werden über queued signals in die UI übergeben. Eine DB-Verbindung gehört jeweils ihrem erzeugenden Thread; spätere Worker erhalten eigene Verbindungen. Das jetzige Gerüst startet keine Hintergrundaufgaben.
+Der Scanner besitzt seine eigene DB-Verbindung auf dem Worker-Thread. Fortschritt und Snapshots erreichen die GUI über queued signals. Der Metadatenprovider bleibt ein Vertrag ohne Netzwerkimplementierung. Details: [LIBRARY.md](LIBRARY.md).
 
-## Datenbank / Migration 001
+## Datenbank / Migrationen 001–002
 
-`profiles(id, name)` enthält genau ein initiales Standardprofil. `app_settings(key, value)` enthält `active_profile=1` und `theme=midnight`. Bibliothekstabellen werden mit ihren Fachmodulen in späteren Migrationen ergänzt, statt jetzt ein ungeprüftes vollständiges Medienschema festzulegen.
+`profiles(id, name)` enthält genau ein initiales Standardprofil. `app_settings(key, value)` enthält `active_profile=1` und `theme=midnight`. Migration 2 ergänzt `media_sources`, `media_titles`, `media_files`, `scan_errors` und `profile_preferences`. WAL wird nach erfolgreicher Migration eingeschaltet. Dateieinträge werden einzeln atomar gespeichert; Discovery/Medienanalyse halten keine lange Schreibtransaktion offen.
 
 `PRAGMA user_version` steuert lückenlose Migrationen ab Version 1. Jede Version läuft atomar in einer Transaktion; bei Fehlern erfolgt Rollback. Bereits durchgeführte Migrationen werden übersprungen. Höhere Schemaversionen werden vor Änderungen abgelehnt. `foreign_keys=ON`, ein Busy-Timeout und `quick_check` sind aktiv. Es gibt keine automatische Datenbank-Neuanlage als Fehlerbehandlung und keinen automatischen Downgrade.
 
@@ -26,7 +27,7 @@ Die initiale Migration ist klein und läuft beim Start. Umfangreiche spätere Mi
 
 Midnight Blue mit Cyan ist Standard, Light Mode ist auswählbar und persistent. Beide Designs verwenden dieselben semantischen Farbtokens einschließlich der Qt-Control-Palette. Tastaturfokus wird sichtbar dargestellt. Häufige Navigation hat keine verzögernde Animation.
 
-Leere Startseitenreihen werden ausgeblendet; ohne Bibliothek zeigt die Startseite einen kompakten Leerzustand. Es gibt keinen Hero-Banner, keine Demofilme und keine vorgetäuschte Wiedergabe. Suche ist sichtbar vorbereitet und deaktiviert. Weitere Einstellungsbereiche sind ausdrücklich als späterer Entwicklungsschritt gekennzeichnet. Der Einrichtungsassistent bleibt ausstehend; es wird keine Online-Einwilligung angenommen.
+Leere Startseitenreihen werden ausgeblendet; ohne Bibliothek zeigt die Startseite einen kompakten Leerzustand. Es gibt keinen Hero-Banner, keine Demofilme und keine vorgetäuschte Wiedergabe. Lokale Titel-Suche öffnet Film-/Seriendetails. Weitere Einstellungsbereiche sind ausdrücklich als späterer Entwicklungsschritt gekennzeichnet. Der sechsstufige Assistent speichert eine ausdrückliche Online-Entscheidung; ohne Provider erfolgen weiterhin keine Online-Abfragen. Sprache und Avatarwahl sind noch nicht vollständig umgesetzt.
 
 ## Grundlegende Wiedergabe
 

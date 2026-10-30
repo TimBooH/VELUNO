@@ -33,7 +33,7 @@ private slots:
         {
             QSqlQuery q(sql);
             QVERIFY(q.exec("SELECT count(*) FROM profiles")); QVERIFY(q.next()); QCOMPARE(q.value(0).toInt(), 1);
-            QVERIFY(q.exec("PRAGMA user_version")); QVERIFY(q.next()); QCOMPARE(q.value(0).toInt(), 1);
+            QVERIFY(q.exec("PRAGMA user_version")); QVERIFY(q.next()); QCOMPARE(q.value(0).toInt(), veluno::schemaMigrations().size());
         }
         sql.close(); sql = {}; QSqlDatabase::removeDatabase("inspect");
     }

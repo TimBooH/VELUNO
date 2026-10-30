@@ -1,0 +1,53 @@
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Dialogs
+import QtQuick.Layouts
+ColumnLayout {
+    id: panel
+    required property QtObject theme
+    required property QtObject library
+    spacing: 12
+    RowLayout {
+        ComboBox { id: category; model: ["Filme", "Serien"]; Accessible.name: "Kategorie des Medienordners" }
+        Button { objectName: "addFolderButton"; text: "Ordner hinzufügen"; onClicked: picker.open() }
+    }
+    Label {
+        text: "Film- und Serienordner werden getrennt und mit ihren Unterordnern eingelesen. Deine Originaldateien bleiben unverändert."
+        color: theme.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
+    }
+    ListView {
+        Layout.fillWidth: true; Layout.preferredHeight: Math.min(180,Math.max(54,contentHeight))
+        clip: true; model: library.sources; spacing: 8
+        ScrollBar.vertical: ScrollBar {}
+        delegate: Rectangle {
+            required property var entry
+            visible: entry.enabled
+            width: ListView.view.width; height: visible ? 62 : 0
+            color: panel.theme.surface; radius: 6; border.color: panel.theme.border
+            RowLayout {
+                anchors.fill: parent; anchors.margins: 10
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Label { text: entry.kind === "movie" ? "Filme" : "Serien"; color: panel.theme.accent }
+                    Label { text: entry.path; textFormat: Text.PlainText; color: panel.theme.text; elide: Text.ElideMiddle; Layout.fillWidth: true }
+                }
+                Button { text: "Entfernen"; enabled: !panel.library.busy; onClicked: { removal.sourceId = entry.id; removal.open() } }
+            }
+        }
+    }
+    Label { visible: library.sourceCount === 0; text: "Noch keine Medienordner ausgewählt."; color: theme.muted }
+    FolderDialog {
+        id: picker
+        title: category.currentIndex === 0 ? "Filmordner wählen" : "Serienordner wählen"
+        onAccepted: panel.library.addSource(selectedFolder,category.currentIndex === 0 ? "movie" : "series")
+    }
+    Dialog {
+        id: removal
+        property var sourceId: 0
+        parent: Overlay.overlay; anchors.centerIn: parent
+        title: "Ordner nicht mehr überwachen?"; modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        Label { width: 420; text: "Bibliothekseinträge bleiben erhalten und werden als nicht verfügbar markiert. Originaldateien werden nicht verändert."; wrapMode: Text.WordWrap; color: panel.theme.text }
+        onAccepted: panel.library.removeSource(sourceId)
+    }
+}

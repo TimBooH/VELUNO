@@ -1,6 +1,6 @@
 # AppImage / Unstable
 
-`appimage.sh BUILDVERZEICHNIS AUSGABEVERZEICHNIS` paketiert einen vorher getesteten Build und prüft das Paket im Offscreen-Modus mit neuem Datenverzeichnis. Das Ausgabeverzeichnis muss frisch sein, damit keine Reste älterer Pakete übernommen werden. Das Skript lädt nichts hoch.
+`appimage.sh BUILDVERZEICHNIS AUSGABEVERZEICHNIS` paketiert einen vorher getesteten Build und prüft das Paket im Offscreen-Modus mit neuem Datenverzeichnis. Das Ausgabeverzeichnis muss frisch sein, damit keine Reste älterer Pakete übernommen werden. Das Skript lädt nichts hoch. `ffprobe` wird als eigenes Programm mit seinen Bibliotheksabhängigkeiten paketiert. Die isolierte Prüfung importiert ein synthetisches Video mit dem im Paket enthaltenen Scanner und erwartet einen Filmtitel ohne Fehler.
 
 linuxdeploy und das Qt-Plugin werden per SHA-256 auf den am 29.10.2026 geprüften Inhalt festgelegt. Die verwendeten `continuous`-URLs können sich ändern; dann muss die Prüfsumme nach erneuter Prüfung bewusst aktualisiert werden. Eine abweichende Datei bricht die Paketierung ab.
 

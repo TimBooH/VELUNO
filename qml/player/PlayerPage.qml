@@ -9,6 +9,8 @@ Item {
     required property QtObject theme
     property bool controlsVisible: true
     property bool fullscreen: false
+    property bool canChooseVersion: false
+    signal versionsRequested()
     signal closeRequested()
     signal openRequested()
     signal fullscreenRequested()
@@ -64,6 +66,7 @@ Item {
                 text: player.error; color: theme.text; wrapMode: Text.WordWrap
             }
         }
+        Button { text: "Andere Filmversion wählen"; visible: page.canChooseVersion; onClicked: page.versionsRequested(); Layout.alignment: Qt.AlignHCenter }
         Button { text: "Andere Datei auswählen"; onClicked: page.openRequested(); Layout.alignment: Qt.AlignHCenter }
     }
     Rectangle {
