@@ -104,7 +104,7 @@ Button {
                 contentItem: Label {
                     text: playButton.text
                     font.pixelSize: 20
-                    color: card.theme.onAccent
+                    color: card.theme.accentText
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }

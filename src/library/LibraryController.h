@@ -19,6 +19,7 @@ class LibraryController final : public QObject {
     Q_PROPERTY(QAbstractItemModel *errors READ errors CONSTANT)
     Q_PROPERTY(QAbstractItemModel *selectedFiles READ selectedFiles CONSTANT)
     Q_PROPERTY(QVariantMap selectedTitle READ selectedTitle NOTIFY selectionChanged)
+    Q_PROPERTY(QVariantList detailFiles READ detailFiles NOTIFY selectionChanged)
     Q_PROPERTY(bool networkBusy READ networkBusy NOTIFY networkChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY scanChanged)
     Q_PROPERTY(bool paused READ paused NOTIFY scanChanged)
@@ -69,6 +70,9 @@ class LibraryController final : public QObject {
     }
     QAbstractItemModel *selectedFiles() {
         return &m_files;
+    }
+    QVariantList detailFiles() const {
+        return m_files.rows();
     }
     QVariantMap selectedTitle() const {
         return m_selection;

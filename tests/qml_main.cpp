@@ -71,6 +71,37 @@ class Setup : public QObject {
         painter.end();
         return image.save(path) ? relative : QString{};
     }
+    Q_INVOKABLE QUrl artworkFixtureUrl(int index) {
+        return QUrl::fromLocalFile(m_directory.filePath("app/" + artworkFixture(index)));
+    }
+    Q_INVOKABLE qint64 detailSeriesFixture() {
+        const auto folder = m_directory.filePath("detail-series");
+        QDir().mkpath(folder);
+        veluno::LibraryRepository repo(*m_database);
+        const auto source = repo.addSource(folder, "series");
+        qint64 title = 0;
+        for (int number = 0; number < 3; ++number) {
+            veluno::ScannedFile file;
+            file.sourceId = source;
+            file.path =
+                folder +
+                QString("/Orbit.S%1E%2.mp4").arg(number == 2 ? 2 : 1).arg(number == 1 ? 2 : 1);
+            if (!QFileInfo::exists(file.path))
+                QFile::copy(videoFixture().toLocalFile(), file.path);
+            file.kind = "series";
+            file.title = "Orbit";
+            file.season = number == 2 ? 2 : 1;
+            file.episode = number == 1 ? 2 : 1;
+            file.width = 96;
+            file.height = 64;
+            file.duration = 14;
+            file.available = true;
+            repo.record(file, "detail-test");
+            title = repo.file(file.path).value("title_id").toLongLong();
+        }
+        m_library->reload();
+        return title;
+    }
     Q_INVOKABLE void resetSetupForTests() {
         m_localization->setLanguage("de");
         m_database->setSetting("setup_complete", "1");

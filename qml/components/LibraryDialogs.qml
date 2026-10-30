@@ -27,144 +27,27 @@ Item {
             detail.close();
         }
     }
-    Dialog {
+    TitleDetails {
         id: detail
-        objectName: "titleDetails"
-        parent: Overlay.overlay
-        anchors.centerIn: parent
-        width: Math.min(parent.width - 64, 850)
-        height: Math.min(parent.height - 64, 590)
-        title: library.selectedTitle.title || "Details"
-        modal: true
-        standardButtons: Dialog.Close
-        ColumnLayout {
-            anchors.fill: parent
-            spacing: 12
-            Label {
-                text: (library.selectedTitle.year || "") + (library.selectedTitle.kind === "series" ? " · Staffeln und Episoden" : " · Filmversionen – höchste Auflösung zuerst")
-                color: dialogs.theme.muted
-            }
-            Label {
-                text: qsTr("Titel wurden lokal aus Dateinamen erkannt. Originaldateien bleiben unverändert.")
-                color: dialogs.theme.muted
-                wrapMode: Text.WordWrap
-                Layout.fillWidth: true
-            }
-            Image {
-                visible: !!library.selectedTitle.backdrop
-                source: library.assetUrl(library.selectedTitle.backdrop || "")
-                Layout.fillWidth: true
-                Layout.preferredHeight: 100
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-            }
-            Label {
-                text: library.selectedTitle.genres || ""
-                color: dialogs.theme.muted
-                visible: text.length > 0
-            }
-            ScrollView {
-                visible: !!library.selectedTitle.overview
-                Layout.fillWidth: true
-                Layout.preferredHeight: 85
-                contentWidth: availableWidth
-                Label {
-                    width: parent.width
-                    text: library.selectedTitle.overview || ""
-                    textFormat: Text.PlainText
-                    wrapMode: Text.WordWrap
-                    color: dialogs.theme.text
-                }
-            }
-            RowLayout {
-                Button {
-                    text: qsTr("Informationen")
-                    onClicked: {
-                        metadataSearch.text = library.selectedTitle.title;
-                        nameEdit.text = library.selectedTitle.title;
-                        yearEdit.value = library.selectedTitle.year || 0;
-                        overviewEdit.text = library.selectedTitle.overview || "";
-                        metadata.showImages(library.selectedTitle.id);
-                        infoEditor.open();
-                    }
-                }
-                Button {
-                    text: {
-                        personal.revision;
-                        return personal.isFavorite(library.selectedTitle.id || 0) ? qsTr("Favorit entfernen") : qsTr("Als Favorit");
-                    }
-                    onClicked: personal.toggleFavorite(library.selectedTitle.id)
-                }
-                Button {
-                    text: {
-                        personal.revision;
-                        return personal.isSeen(library.selectedTitle.id || 0) ? qsTr("Als ungesehen") : qsTr("Als gesehen");
-                    }
-                    onClicked: personal.markSeen(library.selectedTitle.id, !personal.isSeen(library.selectedTitle.id))
-                }
-                Button {
-                    text: qsTr("Sammlungen")
-                    onClicked: memberships.open()
-                }
-            }
-            ListView {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                model: library.selectedFiles
-                clip: true
-                spacing: 10
-                ScrollBar.vertical: ScrollBar {}
-                delegate: Rectangle {
-                    required property var entry
-                    width: ListView.view.width
-                    height: 106
-                    color: dialogs.theme.surface
-                    radius: 7
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: 10
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            Label {
-                                text: (dialogs.library.selectedTitle.kind === "series" ? "S" + entry.season + " E" + entry.episode + " · " : "") + entry.width + " × " + entry.height + (entry.available ? "" : " · Nicht verfügbar")
-                                color: dialogs.theme.text
-                            }
-                            Label {
-                                text: entry.path
-                                textFormat: Text.PlainText
-                                color: dialogs.theme.muted
-                                elide: Text.ElideMiddle
-                                Layout.fillWidth: true
-                            }
-                            Label {
-                                visible: !!entry.diagnostic
-                                text: entry.diagnostic || ""
-                                textFormat: Text.PlainText
-                                color: dialogs.theme.muted
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                            }
-                        }
-                        Button {
-                            text: qsTr("Zuordnen")
-                            onClicked: dialogs.assign(entry)
-                        }
-                        Button {
-                            text: qsTr("Abspielen")
-                            enabled: entry.available
-                            onClicked: {
-                                dialogs.library.playFile(entry.path);
-                                if (!dialogs.library.error.length)
-                                    detail.close();
-                            }
-                        }
-                    }
-                }
-            }
+        theme: dialogs.theme
+        library: dialogs.library
+        personal: dialogs.personal
+        onAssignRequested: function (entry) {
+            dialogs.assign(entry);
+        }
+        onCollectionsRequested: memberships.open()
+        onEditRequested: {
+            metadataSearch.text = library.selectedTitle.title;
+            nameEdit.text = library.selectedTitle.title;
+            yearEdit.value = library.selectedTitle.year || 0;
+            overviewEdit.text = library.selectedTitle.overview || "";
+            metadata.showImages(library.selectedTitle.id);
+            infoEditor.open();
         }
     }
     Dialog {
         id: infoEditor
+        objectName: "titleInfoEditor"
         parent: Overlay.overlay
         anchors.centerIn: parent
         title: qsTr("Titelinformationen und Bilder")
@@ -209,12 +92,12 @@ Item {
                     }
                     Button {
                         text: qsTr("Suchen")
-                        enabled: metadata.configured
+                        enabled: metadata.enabled && metadata.configured
                         onClicked: metadata.search(library.selectedTitle.id, metadataSearch.text)
                     }
                     Button {
                         text: qsTr("Aktualisieren")
-                        enabled: metadata.configured
+                        enabled: metadata.enabled && metadata.configured
                         onClicked: metadata.refreshTitle(library.selectedTitle.id)
                     }
                 }
@@ -278,6 +161,7 @@ Item {
     }
     Dialog {
         id: memberships
+        objectName: "titleCollections"
         parent: Overlay.overlay
         anchors.centerIn: parent
         title: qsTr("Zu Sammlungen hinzufügen")

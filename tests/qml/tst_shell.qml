@@ -391,6 +391,135 @@ TestCase {
         tryCompare(fixture.shelf, "visible", false);
         wait(30);
     }
+    function revealDetailControl(control) {
+        let list = findChild(shell, "titleDetailsScroll");
+        list.contentY = control.mapToItem(list.contentItem, 0, 0).y - 24;
+        list.returnToBounds();
+        wait(300);
+    }
+    function test_detailMoviePresentationAndPlayback() {
+        let id = library.search("Example Movie")[0].id;
+        metadata.edit(id, "Example Movie", "Ein Film für den lokalen Oberflächentest. Die Beschreibung bleibt auch ohne Internet verfügbar.", 2020);
+        metadata.selectLocalImage(id, "backdrop", testInput.artworkFixtureUrl(3));
+        library.openDetails(id);
+        let detail = findChild(shell, "titleDetails");
+        tryCompare(detail, "opened", true);
+        compare(findChild(shell, "titleHeading").text, "Example Movie");
+        verify(findChild(shell, "titleOverview").text.indexOf("Oberflächentest") >= 0);
+        let artwork = findChild(shell, "titleBackdrop");
+        tryCompare(artwork, "status", Image.Ready);
+        let list = findChild(shell, "titleDetailsScroll");
+        compare(list.count, 0); // File paths are not the default presentation.
+        let favorite = findChild(shell, "titleFavorite");
+        let wasFavorite = personal.isFavorite(id);
+        mouseClick(favorite);
+        compare(personal.isFavorite(id), !wasFavorite);
+        mouseClick(favorite);
+        if (screenshotDirectory.length > 0) {
+            waitForRendering(shell.contentItem);
+            grabImage(shell.contentItem.parent).save(screenshotDirectory + "/title-details-midnight.png");
+        }
+        appSettings.theme = "light";
+        tryCompare(findChild(shell, "titlePrimaryPlayLabel"), "color", "#ffffff");
+        wait(40);
+        if (screenshotDirectory.length > 0) {
+            waitForRendering(shell.contentItem);
+            grabImage(shell.contentItem.parent).save(screenshotDirectory + "/title-details-light.png");
+        }
+        appSettings.theme = "midnight";
+        list.positionViewAtEnd(); // Scroll to the content actions.
+        waitForRendering(shell.contentItem);
+        revealDetailControl(findChild(shell, "titleFilesToggle"));
+        mouseClick(findChild(shell, "titleFilesToggle"));
+        tryCompare(detail, "showFiles", true);
+        tryCompare(list, "count", 1);
+        list.positionViewAtIndex(0, ListView.Beginning);
+        list.forceLayout();
+        tryVerify(function () {
+            return list.itemAtIndex(0) !== null;
+        });
+        compare(list.itemAtIndex(0).modelData.path.indexOf("Example.Movie.2020.mp4") >= 0, true);
+        let fileRow = list.itemAtIndex(0);
+        mouseClick(findChild(fileRow, "titleFileAssign-" + fileRow.modelData.id));
+        let assignment = findChild(shell, "assignmentDialog");
+        tryCompare(assignment, "opened", true);
+        assignment.reject();
+        // The header's primary action uses the same player and progress tracking.
+        list.positionViewAtBeginning();
+        waitForRendering(shell.contentItem);
+        mouseClick(findChild(shell, "titlePrimaryPlay"));
+        tryCompare(shell, "playerVisible", true);
+        tryCompare(detail, "opened", false);
+        tryCompare(playback, "loading", false, 10000);
+        verify(playback.active);
+        shell.closePlayer();
+        library.openDetails(id);
+        tryCompare(detail, "opened", true);
+        compare(detail.showFiles, false);
+        mouseClick(findChild(shell, "titleDetailsClose"));
+        tryCompare(detail, "opened", false);
+    }
+    function test_detailSeriesSeasonsAndEditing() {
+        let id = testInput.detailSeriesFixture();
+        library.openDetails(id);
+        let detail = findChild(shell, "titleDetails");
+        tryCompare(detail, "opened", true);
+        let list = findChild(shell, "titleDetailsScroll");
+        tryCompare(list, "count", 2);
+        compare(detail.seasons.length, 2);
+        // No artwork is required for offline title and episode controls.
+        compare(findChild(shell, "titleHeading").text, "Orbit");
+        mouseClick(findChild(shell, "titlePrimaryPlay"));
+        let selector = findChild(shell, "titleSeasonSelector");
+        revealDetailControl(selector);
+        selector.forceActiveFocus();
+        testInput.pressKey(shell, Qt.Key_Space);
+        tryCompare(selector.popup, "opened", true);
+        testInput.pressKey(shell, Qt.Key_Down);
+        testInput.pressKey(shell, Qt.Key_Return);
+        tryCompare(detail, "season", 2);
+        tryCompare(list, "count", 1);
+        list.positionViewAtBeginning();
+        revealDetailControl(findChild(shell, "titleEdit"));
+        mouseClick(findChild(shell, "titleEdit"));
+        let editor = findChild(shell, "titleInfoEditor");
+        tryCompare(editor, "opened", true);
+        editor.close();
+        revealDetailControl(findChild(shell, "titleCollectionsButton"));
+        mouseClick(findChild(shell, "titleCollectionsButton"));
+        let collections = findChild(shell, "titleCollections");
+        tryCompare(collections, "opened", true);
+        collections.close();
+        // Play the explicitly selected season's episode.
+        list.positionViewAtIndex(0, ListView.Beginning);
+        list.forceLayout();
+        let row = list.itemAtIndex(0);
+        verify(row !== null);
+        compare(row.modelData.season, 2);
+        mouseClick(findChild(row, "titleFilePlay-" + row.modelData.id));
+        tryCompare(shell, "playerVisible", true);
+        tryCompare(detail, "opened", false);
+        tryCompare(playback, "loading", false, 10000);
+        compare(playback.error, "");
+        verify(playback.active);
+        shell.closePlayer();
+        shell.width = 980;
+        shell.height = 600;
+        library.openDetails(id);
+        tryCompare(detail, "opened", true);
+        tryVerify(function () {
+            return detail.width <= shell.width - 48;
+        });
+        tryVerify(function () {
+            return detail.height <= shell.height - 48;
+        });
+        if (screenshotDirectory.length > 0) {
+            waitForRendering(shell.contentItem);
+            grabImage(shell.contentItem.parent).save(screenshotDirectory + "/title-details-series-compact.png");
+        }
+        testInput.pressKey(shell, Qt.Key_Escape);
+        tryCompare(detail, "opened", false);
+    }
     function test_homeArtworkSetupAndScanErrorsReachSettings() {
         let configure = findChild(shell, "configureArtwork");
         verify(configure.visible);

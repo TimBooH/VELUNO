@@ -174,15 +174,13 @@ void LibraryController::applySnapshot(const QVariantMap &snapshot) {
                 updated = row.toMap();
                 break;
             }
-        if (updated != m_selection) {
-            m_selection = updated;
-            emit selectionChanged();
-        }
+        m_selection = updated;
         try {
             m_files.replace(m_repository.files(m_selection.value("id").toLongLong()));
         } catch (const std::exception &e) {
             report(QString::fromUtf8(e.what()));
         }
+        emit selectionChanged();
     }
     emit catalogChanged();
 }

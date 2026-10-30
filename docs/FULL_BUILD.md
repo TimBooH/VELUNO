@@ -62,3 +62,9 @@ Die begrenzten Paket-Smoke-Tests nutzen absichtlich einen mpv-Null-Audioausgang 
 Die Startseite verwendet rahmenlose 2:3-Poster und 16:9-Weiterschauen-Kacheln, mit Reihenpfeilen, Hover-Wiedergabe und Fortschrittsbalken. Gemäß UI-003 gibt es keinen großen Hero-Banner. Ohne Cover wird der vollständige Titel als Ersatz angezeigt, kein einzelner Buchstabe. Ein defekter Bildcache verhindert die Bedienung nicht.
 
 Fehlende Cover: **Cover einrichten → Einstellungen/Bibliothek** führt zur ausdrücklichen Online-Freigabe und zum eigenen TMDB-Lesezugriffstoken. Anschließend Metadaten aktualisieren; mehrdeutige Titel über die Titeldetails zuordnen. Eigene Poster/Hintergründe lassen sich ohne Onlineabruf wählen. Die App bringt keine vorinstallierten kommerziellen Filmcover mit. Die untere Scanstatuszeile öffnet denselben Bibliotheksbereich mit konkreten Scanfehlern und Wiederholen. Die Gestaltung allein repariert keine unerreichbaren NAS-Dateien oder falschen Dateinamen.
+
+## Film- und Seriendetails
+
+Klick auf ein Poster öffnet eine große Titeldetailansicht mit lokalem Hintergrundbild, Titel, Abspielen, Beschreibung und vorhandenen Metadaten. Favoriten, Gesehen-Status und Sammlungen sind direkt erreichbar. Bei Serien führt „Episoden auswählen“ zur Folgenliste; über die Staffelauswahl werden die zugehörigen Episoden gezeigt. Das X bleibt beim Scrollen erreichbar; Escape schließt ebenfalls.
+
+Technische Dateipfade, Versionen und Dateizuordnung stehen unter **Dateien und Versionen**. Die höchste Auflösung bleibt Standard, andere Versionen sind weiterhin einzeln abspielbar. **Informationen und Bilder bearbeiten** öffnet den bisherigen lokalen Editor mit optionalen TMDB-Aktionen. Ohne Bilder wird ein neutraler Hintergrund verwendet. Die Startseite bleibt gemäß UI-003 ohne großen Hero-Banner.

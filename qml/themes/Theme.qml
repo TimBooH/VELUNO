@@ -8,5 +8,5 @@ QtObject {
     readonly property color muted: light ? "#506179" : "#A5B5CC"
     readonly property color border: light ? "#CBD5E3" : "#2C3E59"
     readonly property color accent: light ? "#006B80" : "#64DDF0"
-    readonly property color onAccent: light ? "#FFFFFF" : "#092331"
+    readonly property color accentText: light ? "#FFFFFF" : "#092331"
 }

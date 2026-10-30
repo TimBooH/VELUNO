@@ -135,7 +135,7 @@ ApplicationWindow {
     palette.button: colors.raised
     palette.buttonText: colors.text
     palette.highlight: colors.accent
-    palette.highlightedText: colors.onAccent
+    palette.highlightedText: colors.accentText
     palette.mid: colors.border
     palette.dark: colors.border
     palette.light: colors.raised
@@ -274,7 +274,7 @@ ApplicationWindow {
                         Label {
                             anchors.centerIn: parent
                             visible: !window.personalData.activeProfile.avatar_url
-                            color: colors.onAccent
+                            color: colors.accentText
                             text: window.personalData.activeProfile.avatar === "cinema" ? "▣" : window.personalData.activeProfile.avatar === "rocket" ? "↑" : window.personalData.activeProfile.avatar === "planet" ? "◉" : window.mediaLibrary.profileName.slice(0, 1).toUpperCase()
                         }
                     }
