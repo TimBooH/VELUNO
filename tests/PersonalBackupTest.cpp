@@ -180,6 +180,10 @@ class PersonalBackupTest : public QObject {
         PlayerSettings again(db, player);
         QCOMPARE(again.shortcuts().value("pause").toString(), QString("Ctrl+P"));
         QCOMPARE(again.options().value("sub_size").toInt(), 48);
+        settings.setOption("sub_background", true);
+        QTest::qWait(100);
+        QVERIFY2(player.error().isEmpty(), qPrintable(player.error()));
+        settings.setOption("sub_background", false);
         settings.setOption("sub_size", -1);
         QVERIFY(!settings.error().isEmpty());
         QTest::qWait(100);

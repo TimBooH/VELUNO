@@ -78,6 +78,12 @@ MpvSession::~MpvSession() {
 MpvEngine::MpvEngine(QObject *parent, bool nullOutput)
     : QObject(parent), m_session(std::make_shared<MpvSession>(nullOutput)),
       m_nullOutput(nullOutput), m_rendererReady(nullOutput) {
+    mpv_node subtitleOption{};
+    if (mpv_get_property(m_session->handle, "option-info/sub-border-style", MPV_FORMAT_NODE,
+                         &subtitleOption) >= 0) {
+        m_hasSubtitleBorderStyle = true;
+        mpv_free_node_contents(&subtitleOption);
+    }
     m_audioDevices = {QVariantMap{{"name", "auto"}, {"description", "Systemstandard"}}};
     for (const char *name : {"time-pos", "duration", "volume", "speed"})
         mpv_observe_property(m_session->handle, 0, name, MPV_FORMAT_DOUBLE);
@@ -247,10 +253,12 @@ void MpvEngine::configure(const QVariantMap &options) {
     setNumber("sub-font-size", options.value("sub_size", 36).toDouble());
     setNumber("sub-pos", options.value("sub_position", 100).toDouble());
     setNumber("sub-delay", options.value("sub_delay", 0).toDouble());
-    command(
-        {"set", "sub-border-style",
-         options.value("sub_background", false).toBool() ? "opaque-box" : "outline-and-shadow"});
-    command({"set", "sub-back-color", "#A0000000"});
+    const bool background = options.value("sub_background", false).toBool();
+    // Older mpv selects its box style through back-color alpha; newer releases
+    // expose a separate option. Probe the capability instead of assuming a version.
+    if (m_hasSubtitleBorderStyle)
+        command({"set", "sub-border-style", background ? "opaque-box" : "outline-and-shadow"});
+    command({"set", "sub-back-color", background ? "#A0000000" : "#00000000"});
 }
 void MpvEngine::selectAudio(int id) {
     if (m_active && id > 0)

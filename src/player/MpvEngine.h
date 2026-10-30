@@ -115,6 +115,7 @@ class MpvEngine final : public QObject {
   private:
     QVariantList m_audioDevices, m_audioTracks, m_subtitleTracks;
     double m_creditsStart = -1;
+    bool m_hasSubtitleBorderStyle = false;
     void pollEvents();
     void loadPending();
     bool command(const QList<QByteArray> &arguments);
