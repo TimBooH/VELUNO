@@ -144,3 +144,9 @@ Lokaler Abschlussstand: Build erfolgreich; alle sechs CTest-Suiten (`player`, `p
 Der erste SMB-CI-Lauf [41089241970](https://github.com/TimBooH/VELUNO/actions/runs/41089241970) stoppte beim Kompilieren der Netzwerksuite: `MpvEngine(true)` übergab bool an den QObject-Elternparameter. Richtig ist `MpvEngine(nullptr,true)`. Dies betrifft den Testaufbau und ist kein Qt-Versionsunterschied.
 
 Die vorherige lokale Befehlsfolge stoppte nach dem Buildfehler nicht und führte alte Testprogramme aus. Die oben genannten 18,91 Sekunden belegen deshalb nicht die letzte Player-Test-Erweiterung. Das wird hier ausdrücklich korrigiert. Nach Korrektur des Konstruktors wurden Build und Tests mit `set -e` erneut ausgeführt: Neubau erfolgreich, alle sechs Testsuiten bestanden in 18,76 Sekunden, einschließlich des jetzt neu gebauten Netzwerk-/libmpv-Tests. Der Actions-Workflow hatte den Buildfehler korrekt erkannt und kein Artefakt erstellt.
+
+### Erfolgreicher SMB-CI-Stand
+
+[Lauf 41089751941](https://github.com/TimBooH/VELUNO/actions/runs/41089751941) für `8a5730a7e2b965f46de4ff6c8d668f3c658391c2` ist erfolgreich: Ubuntu 24.04 / Qt 6.4.2, Build, alle sechs Testsuiten, Programmstart, AppImage-Paketierung, isolierter Import/Ordnerdialog und Artefakt-Upload bestanden. Die Netzwerksuite verwendet den dokumentierten KIO-FUSE-Vertrag auf einem privaten Testbus; echte NAS-/FUSE-/Anmeldetests bleiben ausdrücklich ausstehend.
+
+[SMB-Artefakt 12993657178](https://github.com/TimBooH/VELUNO/actions/runs/41089751941/artifacts/12993657178): ZIP mit AppImage und Prüfsumme, 115.449.772 Bytes. Ablauf am 13.11.2026 um 17:30:24 Uhr Europe/Berlin. ZIP-SHA-256: `293ddfcd1a8c8e2aaa69ea362c7c51e6ed24825ec68620cb1f663ee37711481e`. Die bekannten nicht blockierenden Paket-/Scannerhinweise gelten weiterhin. Kein GitHub-Release und keine Änderung an `main`; dieser reine Nachweiscommit überspringt CI.
