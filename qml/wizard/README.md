@@ -1,3 +1,3 @@
 # Einrichtung
 
-SetupWizard.qml enthält sechs persistierte Schritte einschließlich ausdrücklicher Metadatenentscheidung, optionalen Medienordnern und Hintergrundscan. Deutsch ist derzeit fest; Sprachauswahl und Avatarwahl bleiben offen. Siehe [LIBRARY.md](../../docs/LIBRARY.md).
+Sechs persistierte Schritte: Willkommen/Sprache, Profil/Avatar, Medienordner, ausdrückliche Metadatenentscheidung, Hintergrundscan und Abschluss. Deutsch/Englisch sind umschaltbar. Profile/Bilder und Anbieterzugang sind später in den Einstellungen bearbeitbar. Siehe FULL_BUILD.md.

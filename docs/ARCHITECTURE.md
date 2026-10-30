@@ -1,43 +1,40 @@
-# Architektur der technischen Grundlage
+# Architektur
 
-`src/app` verdrahtet den Lebenszyklus. QML kennt `AppSettings` und den Playback-Controller `MpvEngine` sowie `LibraryController`, keine SQL-Verbindung oder rohen mpv-Handles. Das reguläre ApplicationWindow nutzt Systemdekorationen und erzwingt weder X11 noch rahmenloses Fensterverhalten. Qt wählt das Plattform-Backend aus der Desktop-Sitzung.
+Die Anwendung ist ein natives Qt-Quick-ApplicationWindow. Qt wählt Wayland aus der Desktopsitzung; Fensterdekorationen und Vollbild bleiben beim Fenstersystem. QML kennt ausschließlich QObject-Fachcontroller, keine SQLite-Verbindungen und keine mpv-Handles.
 
-| Schicht | Verantwortung / aktueller Umfang |
+| Modul | Verantwortung |
 | --- | --- |
-| qml | Feste obere Navigation, Bibliotheksraster, Suche, Assistent, Profilmenü, Einstellungen, Dark/Light-Farben |
-| core | Theme-Auswahl, Persistenzfehler mit Rückmeldung an die Oberfläche |
-| database | Verbindungslebenszyklus, gebundene SQL-Parameter, SQLite-Migrationen |
-| player | libmpv-Lebenszyklus, asynchrone Wiedergabebefehle, Eventverarbeitung und getrennte Videoausgabe auf einem Worker-Thread |
-| scanner | Rekursive Discovery, Dateinamenparser und ffprobe auf eigenem QThread; Pause/Fortsetzen/Abbruch |
-| library | GUI-Controller, inkrementelle Listenmodelle, Sortier-/Filter-Proxies, Quellenbeobachtung |
-| metadata | Austauschbarer Providervertrag und expliziter Einwilligungszustand; kein Netzwerkclient |
-| platform | SMB-URL-Normalisierung, asynchrone KIO-FUSE-Verbindung über den Host-Sitzungsbus |
-| übrige Module | Reservierte Modulverzeichnisse mit dokumentierter Verantwortung |
+| app/core | Lebenszyklus, Instanz-Lock, Theme, Sprache und Verdrahtung |
+| database | Gebundene SQL-Parameter, Transaktionen, Migrationen 1–4, WAL und Repository |
+| library/scanner | Gemeinsame Film-/Serienbibliothek, Quellen, Parser, ffprobe, inkrementelle Modelle und Beobachtung |
+| profiles/collections | PersonalController für Profile, private Favoriten/Sammlungen, Fortschritt, Gesehen und Episodenwechsel |
+| metadata | Optionaler TMDB-Controller, Zustimmung, gedrosselte asynchrone Abfragen, Korrekturen und Bildvarianten |
+| player | libmpv-Session, asynchrone Befehle, Spuren/Geräte/Kapitel, Einstellungen und separate Videoausgabe |
+| backup | Konsistente Snapshots, referenzierte Bilder, Prüfung, Rotation und vorbereitete Gesamtwiederherstellung |
+| updater | Konfigurierbare signierte Manifeste, verifizierter Download und ausdrücklich bestätigter atomarer Austausch |
+| platform | KDE-KIO-FUSE über D-Bus, dauerhafte SMB-Identitäten und temporäre lokale Zugriffspfade |
+| qml | Navigation, Detaildialoge, persönliche Seiten, Einstellungen, Assistent, Themes und Player |
 
-Der Scanner besitzt seine eigene DB-Verbindung auf dem Worker-Thread. Fortschritt und Snapshots erreichen die GUI über queued signals. Der Metadatenprovider bleibt ein Vertrag ohne Netzwerkimplementierung. Details: [LIBRARY.md](LIBRARY.md).
+## Daten und Threads
 
-## Datenbank / Migrationen 001–002
+SQLite-Verbindungen gehören ihrem erzeugenden Thread. Der Scanner besitzt eine eigene Verbindung auf seinem QThread. Ergebnisse erreichen die GUI als queued snapshots und werden über Zeilenänderungen/-bewegungen statt vollständigem Modellreset eingearbeitet. Kurze Schreibtransaktionen speichern Dateien einzeln; Discovery und ffprobe halten keine lange Schreibtransaktion offen. GUI-Controller greifen auf die GUI-Verbindung zu.
 
-`profiles(id, name)` enthält genau ein initiales Standardprofil. `app_settings(key, value)` enthält `active_profile=1` und `theme=midnight`. Migration 2 ergänzt `media_sources`, `media_titles`, `media_files`, `scan_errors` und `profile_preferences`. WAL wird nach erfolgreicher Migration eingeschaltet. Dateieinträge werden einzeln atomar gespeichert; Discovery/Medienanalyse halten keine lange Schreibtransaktion offen.
+Persönliche Tabellen sind über profile_id getrennt. Medienquellen und Titel bleiben gemeinsam. Fortschritt verwendet Profil/Titel/Staffel/Episode als Identität; Filmversionen teilen ihren Fortschritt. Ein Profilwechsel speichert den aktuellen Stand und stoppt mpv vor dem Wechsel des aktiven Profils.
 
-`PRAGMA user_version` steuert lückenlose Migrationen ab Version 1. Jede Version läuft atomar in einer Transaktion; bei Fehlern erfolgt Rollback. Bereits durchgeführte Migrationen werden übersprungen. Höhere Schemaversionen werden vor Änderungen abgelehnt. `foreign_keys=ON`, ein Busy-Timeout und `quick_check` sind aktiv. Es gibt keine automatische Datenbank-Neuanlage als Fehlerbehandlung und keinen automatischen Downgrade.
+Metadaten verwenden QNetworkAccessManager ohne blockierendes Warten. Ohne API-Zugang und ausdrückliche Zustimmung wird kein Titelrequest gestartet. Bilder werden auf einem separaten Worker decodiert und atomar gespeichert. Manuelle Feld-/Bildentscheidungen haben persistente Schutzflags. Der Provider ist derzeit TMDB; Schnittstelle und Modul sind getrennt, Anbieterbedingungen/Attribution und weitere Anbieter bleiben eigenständig zu prüfen.
 
-Die initiale Migration ist klein und läuft beim Start. Umfangreiche spätere Migrationen müssen vor ihrer Umsetzung auf Startzeit, Sicherung und Thread-Nutzung geprüft werden.
+Sicherungen erzeugen auf ihrem Worker über VACUUM INTO einen konsistenten DB-Snapshot und kopieren ausschließlich referenzierte dauerhafte Bilder. Wiederherstellung wird nach Prüfung und Vorsicherung vorbereitet und vor Öffnen der DB beim Neustart aktiviert. Ein außerhalb des Datenordners liegender Instanz-Lock verhindert konkurrierende Anwendung bei diesem Austausch. Details und Fehlergrenzen: FULL_BUILD.md.
 
-## Oberfläche und Umfang
+Updateprüfung/Download sind asynchron. Das Ed25519-signierte Manifest ist die Vertrauensbasis; reine HTTPS-/Prüfsummenaussagen reichen nicht als Ersatz. Installation erfordert explizite Aktion und einen erfolgreichen Update-Snapshot. Kopieren/Verifizieren/Austausch laufen auf einem Worker, die alte AppImage-Datei bleibt erhalten. Veröffentlichung wird dadurch nicht autorisiert.
 
-Midnight Blue mit Cyan ist Standard, Light Mode ist auswählbar und persistent. Beide Designs verwenden dieselben semantischen Farbtokens einschließlich der Qt-Control-Palette. Tastaturfokus wird sichtbar dargestellt. Häufige Navigation hat keine verzögernde Animation.
+## Videoausgabe
 
-Leere Startseitenreihen werden ausgeblendet; ohne Bibliothek zeigt die Startseite einen kompakten Leerzustand. Es gibt keinen Hero-Banner, keine Demofilme und keine vorgetäuschte Wiedergabe. Lokale Titel-Suche öffnet Film-/Seriendetails. Weitere Einstellungsbereiche sind ausdrücklich als späterer Entwicklungsschritt gekennzeichnet. Der sechsstufige Assistent speichert eine ausdrückliche Online-Entscheidung; ohne Provider erfolgen weiterhin keine Online-Abfragen. Sprache und Avatarwahl sind noch nicht vollständig umgesetzt.
+MpvEngine besitzt die geteilte mpv-Session und leert Ereignisse alle 30 ms ohne blockierendes Warten. Befehle sind asynchron; Benutzer-MPV-Konfiguration und externe Skripte sind deaktiviert. VideoWorker besitzt den offiziellen libmpv-Software-Renderkontext auf einem eigenen Thread. Ein begrenzter Einzelbildpuffer hält das neueste Frame; höchstens eine GUI-Benachrichtigung wartet gleichzeitig. VideoItem zeichnet das Bild über QQuickPaintedItem. Der Renderkontext wird auf seinem Thread freigegeben, bevor Session und mpv beendet werden.
 
-## Grundlegende Wiedergabe
+Hardware-Decodierung ist konfigurierbar; die aktive Software-Bildausgabe ist kein HDR-/GPU-/4K-Leistungsnachweis. Der zuvor untersuchte fehlerhafte OpenGL-Adapter wurde nicht wieder eingeführt. Benannte Abspannkapitel, manuelle Marker und Ende-Fallback steuern den Seriencountdown.
 
-`MpvEngine` ist der QML-Controller für lokale Dateien und besitzt den mpv-Client über eine geteilte Session. Befehle und Property-Änderungen werden asynchron an mpv geschickt. Ein 30-ms-Timer leert den Ereignispuffer ohne blockierendes Warten. Dateipfade werden als absolute native Pfade übergeben; URLs für die unmittelbare Dateiauswahl müssen lokal sein. Benutzer-MPV-Konfiguration und automatisch geladene externe Skripte sind deaktiviert.
+## Persistenz und Paket
 
-`VideoWorker` besitzt den libmpv-Software-Renderkontext auf einem eigenen QThread. Resize und Frame-Requests werden in diesen Thread eingereiht. Ein Mutex-geschützter Einzelbildpuffer hält nur das neueste Bild; höchstens eine GUI-Benachrichtigung wartet gleichzeitig. `VideoItem` zeichnet das unveränderliche Bild mit QQuickPaintedItem. Qt übernimmt die Darstellung unabhängig von OpenGL/Vulkan/Software-Backend; eigener OpenGL-Code ist in diesem Stand nicht enthalten.
+Migrationen laufen atomar und lückenlos. Fremdschlüssel, Busy-Timeout, quick_check und WAL sind aktiv; neuere Schemata werden abgewiesen. Die Anwendung repariert oder ersetzt beschädigte Daten nicht stillschweigend. Tokens liegen in der besitzerbeschränkten DB; private Backups enthalten sie. Eigene Bilder werden kopiert, Originalmedien nie umbenannt/verschoben/gelöscht.
 
-Beim Abbau wird der Renderkontext auf seinem Worker freigegeben, bevor der Thread endet. Die geteilte Session bleibt bis danach erhalten; erst anschließend darf mpv beendet werden. Schließen und Navigation stoppen die Wiedergabe. Die numerische C-Locale wird nach der Qt-Anwendungsinitialisierung für libmpv hergestellt; Qt-Lokalisierung bleibt davon unabhängig.
-
-Voreinstellungen sind deutsche Audiospurpräferenz, Untertitel aus und `hwdec=auto-safe`. Die aktive Bildausgabe dieser Stufe ist jedoch Software-Rendering; daraus folgt keine Abnahme von Hardware-Decodierung oder GPU-/HDR-Ausgabe. Der direkte GPU-Pfad bleibt eine eigene offene Integrationsaufgabe. Für ihn wurden in dieser Umgebung schwarze Bilder/Rasterartefakte beobachtet; er ist nicht Teil dieses Builds.
-
-SMB-Quellen verwenden dieselben Bibliothekstabellen mit dauerhaften SMB-URLs. Der Scanner löst den Zugriff pro Durchlauf auf; die Wiedergabe verbindet pro Wunsch asynchron. Temporäre Mountpfade und Zugangsdaten werden nicht in VELUNO gespeichert. Siehe LIBRARY.md für Hostabhängigkeiten und Testgrenzen.
+AppImage enthält Qt/QML-/Wayland-/SQLite-/TLS-Plugins, libmpv, ffprobe und OpenSSL-Laufzeitbibliotheken. Isolierte Pakettests entfernen SDK-Pfade und prüfen TLS-Backend, Import und Dialog. KIO-FUSE/KDE-Sitzung, Systemzertifikate und die echte Zielhardware bleiben Hostvoraussetzungen. Quell- und Paketnachweise stehen im Entwicklungsprotokoll; die Statusmatrix unterscheidet Implementierung von Abnahme.

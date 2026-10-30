@@ -29,8 +29,15 @@ export EXTRA_QT_MODULES="waylandcompositor"
 export EXTRA_PLATFORM_PLUGINS="libqoffscreen.so;libqwayland-egl.so;libqwayland-generic.so"
 export OUTPUT="VELUNO-0.1.0-unstable-x86_64.AppImage"
 export VERSION="0.1.0-dev"
+"$build_dir/veluno" --build-info > "$output_dir/build-info.json"
+qt_plugins=$("$QMAKE" -query QT_INSTALL_PLUGINS)
+if [[ ! -d "$qt_plugins/tls" && -n "${PKG_CONFIG_SYSROOT_DIR:-}" ]]; then qt_plugins="$PKG_CONFIG_SYSROOT_DIR$qt_plugins"; fi
+mkdir -p "$app_dir/usr/plugins/tls"
+cp "$qt_plugins/tls/libqopensslbackend.so" "$app_dir/usr/plugins/tls/"
+openssl_libdir=$(pkg-config --variable=libdir openssl)
+if [[ ! -r "$openssl_libdir/libssl.so" && -n "${PKG_CONFIG_SYSROOT_DIR:-}" ]]; then openssl_libdir="$PKG_CONFIG_SYSROOT_DIR$openssl_libdir"; fi
 cd "$output_dir"
-linuxdeploy --appdir "$app_dir" --plugin qt --output appimage
+linuxdeploy --appdir "$app_dir" --library "$openssl_libdir/libssl.so" --library "$openssl_libdir/libcrypto.so" --plugin qt --output appimage
 sha256sum "$OUTPUT" > "$OUTPUT.sha256"
 # Exercise the resulting package, including bundled QML and SQLite plugins.
 smoke_dir=$(mktemp -d)

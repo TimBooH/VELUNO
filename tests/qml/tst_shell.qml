@@ -47,6 +47,7 @@ TestCase {
         results.forceLayout()
         let result = results.itemAtIndex(0)
         verify(result !== null)
+        verify(result.text.indexOf("Example Movie") >= 0)
         mouseMove(result, 20, 20)
         mouseClick(result)
         tryCompare(detail, "opened", true)
@@ -124,6 +125,34 @@ TestCase {
         mouseClick(next)
         tryCompare(library, "setupComplete", true)
         tryCompare(wizard, "opened", false)
+    }
+    function test_languageAndNewSettingsPages() {
+        shell.currentPage = "Einstellungen"
+        let page = findChild(shell, "settingsPage")
+        verify(page !== null)
+        for (let index = 2; index <= 6; ++index) {
+            page.section = index
+            waitForRendering(shell.contentItem)
+            verify(shell.visible)
+            if (index === 2) { let device = findChild(shell, "audioDeviceSelector"); verify(device.count >= 1); verify(device.displayText.length > 0) }
+            if (screenshotDirectory.length > 0) grabImage(shell.contentItem.parent).save(screenshotDirectory + "/settings-" + index + ".png")
+        }
+        localization.language = "en"
+        tryCompare(localization, "language", "en")
+        tryCompare(findChild(shell, "settingsSectionTitle"), "text", "About VELUNO")
+        waitForRendering(shell.contentItem)
+        localization.language = "de"
+        tryCompare(localization, "language", "de")
+        tryCompare(findChild(shell, "settingsSectionTitle"), "text", "Über VELUNO")
+        page.section = 3
+        waitForRendering(shell.contentItem)
+        mouseClick(findChild(shell, "newProfile"))
+        let editor = findChild(shell, "profileEditorName")
+        verify(editor !== null)
+        editor.text = "Testprofil"
+        verify(editor.width <= findChild(shell, "profileEditor").availableWidth + 1)
+        // The backend suite verifies creation/deletion and strict profile isolation.
+        if (screenshotDirectory.length > 0) grabImage(shell.contentItem.parent).save(screenshotDirectory + "/profiles.png")
     }
     function test_navigation() {
         let buttons = []

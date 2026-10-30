@@ -2,7 +2,7 @@
 
 ## Benutzung
 
-Beim ersten Start führt ein sechsstufiger Assistent durch Begrüßung, Profilname, Medienordner, Metadatenentscheidung, Scan und Abschluss. Ordner dürfen ausgelassen werden. Die Metadatenentscheidung muss ausdrücklich getroffen werden; auch bei Zustimmung führt dieser Stand keine Online-Abfragen aus. Nach dem Scanstart kann die Startseite bereits benutzt werden. Der Assistent speichert seinen Schritt; Sprache ist derzeit Deutsch, Avatarwahl folgt später.
+Beim ersten Start führt ein sechsstufiger Assistent durch Begrüßung, Profilname, Medienordner, Metadatenentscheidung, Scan und Abschluss. Ordner dürfen ausgelassen werden. Die Metadatenentscheidung muss ausdrücklich getroffen werden; auch bei Zustimmung führt dieser Stand keine Online-Abfragen aus. Nach dem Scanstart kann die Startseite bereits benutzt werden. Der Assistent speichert seinen Schritt; Deutsch/Englisch und Standardavatare sind wählbar, eigene Bilder anschließend in den Profileinstellungen.
 
 Weitere Ordner lassen sich über **Medienordner** oder **Profil → Einstellungen → Bibliothek** hinzufügen. Jeder Ordner gehört zu Filmen oder Serien. Unterordner werden rekursiv durchsucht. Überlappende Ordner derselben Kategorie sind zulässig und werden anhand kanonischer Dateipfade dedupliziert; überlappende Film-/Serienordner werden zur Vermeidung widersprüchlicher Zuordnungen abgelehnt. Entfernen deaktiviert nur die Quelle und erhält die Einträge. Mediendateien werden weder umbenannt noch verändert oder gelöscht.
 
@@ -10,7 +10,7 @@ Filme wie `Mein.Film.2020.1080p.mkv` werden aus dem Namen erkannt. Serien verwen
 
 Gleicher Titel/Jahr/Kategorie fasst Dateien zusammen. Filmdetails zeigen die Versionen mit tatsächlicher ermittelter Auflösung. Abspielen bevorzugt die höchste Auflösung; ist sie offline oder fehlerhaft, wird der Fehler angezeigt und eine andere Version kann ausdrücklich gewählt werden. Serien zeigen eine nach Staffel/Episode geordnete Dateiliste. Automatische nächste Episode folgt später.
 
-Startseite, Film-/Serienraster und lokale Suche zeigen die importierten Titel. Unverfügbare Einträge bleiben sichtbar und sind filterbar. Sortierung, Verfügbarkeitsfilter und Kachelgröße werden profilbezogen gespeichert. Zufallsreihen behalten ihre Reihenfolge innerhalb der Sitzung. Cover sind ausdrücklich als fehlend gekennzeichnet; Anbieterinformationen und Coverdownloads folgen später. Suche umfasst bisher Film-/Serientitel, keine Episoden oder Sammlungen. Favoriten, Sammlungen und Fortsetzen sind weiterhin offen.
+Startseite, Film-/Serienraster und lokale Suche zeigen die importierten Titel. Unverfügbare Einträge bleiben sichtbar und sind filterbar. Sortierung, Verfügbarkeitsfilter und Kachelgröße werden profilbezogen gespeichert. Zufallsreihen behalten ihre Reihenfolge innerhalb der Sitzung. Ohne gespeicherte Bilder werden Cover als fehlend gekennzeichnet. Anbieterinformationen und Bilder sind nach Zugang/Einwilligung über TMDB verfügbar; eigene Bilder können lokal gewählt werden. Suche umfasst entsprechend SEARCH-001 ausschließlich Film-/Serientitel, keine Episoden oder Sammlungen. Favoriten, Sammlungen und Fortsetzen sind im Gesamtfunktionsausbau implementiert (FULL_BUILD.md).
 
 ## Scan und Persistenz
 
@@ -24,7 +24,7 @@ QFileSystemWatcher überwacht entdeckte Unterordner. Änderungen werden 1,2 Seku
 
 ## Datenbank und Grenzen
 
-Migration 2 ergänzt Quellen, Titel, Dateien, Scanfehler und Profilpräferenzen. Migration 1 und bestehende Einstellungen bleiben erhalten; WAL erlaubt getrennte GUI-/Worker-Verbindungen. Ein älterer Build mit Schema 1 kann die aktualisierte Datenbank nicht öffnen. Es gibt keinen automatischen Downgrade und noch keine Sicherungs-/Wiederherstellungsfunktion.
+Migration 2 ergänzt Quellen, Titel, Dateien, Scanfehler und Profilpräferenzen. Migration 1 und bestehende Einstellungen bleiben erhalten; WAL erlaubt getrennte GUI-/Worker-Verbindungen. Ein älterer Build mit Schema 1 kann die aktualisierte Datenbank nicht öffnen. Migrationen 3–4 ergänzen persönliche Daten und Metadaten; es gibt konsistente Sicherungen und vollständige Wiederherstellung. Automatische Downgrades bleiben gesperrt.
 
 Automatisiert geprüft sind echte synthetische Medien, Auflösungsauswahl, rekursiver Import, Überlappungen, unbekannte/defekte Dateien, manuelle Zuordnung, Pause/Fortsetzen/Neustart, Offline-/Rückkehrsimulation, Dateibeobachtung, Profilpräferenzen und Originaldatei-Hashes. Die UI-Tests bedienen Raster, Suche, Player, Zuordnung und Assistenten. Echte KDE-Ordnerdialoge, Desktop-Benachrichtigungen, physische Wechseldatenträger/Netzlaufwerke, sehr große Bibliotheken und CachyOS/HiDPI sind noch nicht abgenommen.
 

@@ -1,5 +1,7 @@
 # Grundlegende lokale Wiedergabe · 29.10.2026
 
+Dieser Text dokumentiert den historischen Player-Einstieg. Der aktuelle Ausbau mit Fortschritt, Versionen, Serienwechsel, Geräten, Untertiteln und Kürzeln steht in [FULL_BUILD.md](FULL_BUILD.md); die unten beschriebenen damaligen Funktionsgrenzen sind kein aktueller Fehlbestand.
+
 ## Freigegebener Schritt
 
 Der Nutzer hat nach dem getesteten Projektfundament die Fortsetzung freigegeben und zuletzt ausdrücklich „Grundlegende Videowiedergabe mit libmpv“ gewählt. Die zuvor ebenfalls gewählte Ordner-/Scan-Stufe wird anschließend umgesetzt. Entwicklung bleibt auf `unstable`; keine Stable-Freigabe.

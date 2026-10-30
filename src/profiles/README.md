@@ -1,5 +1,5 @@
 # profiles
 
-Profilverwaltung und Wechsel; bisher wird nur ein Standardprofil durch Migration 001 angelegt.
+PersonalController verwaltet lokale Profile, Avatare, Favoriten, Sammlungen, Fortschritt und Serienwechsel. Persönliche Tabellen sind über profile_id getrennt; die Bibliothek bleibt gemeinsam.
 
-Dieser reservierte Modulort enthält noch keine ausführbare Fachlogik.
+Siehe [FULL_BUILD.md](../../docs/FULL_BUILD.md) für Bedienung, Nachweise und Grenzen.

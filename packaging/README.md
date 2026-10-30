@@ -17,3 +17,10 @@ Zusätzlich zum Medienimport wird der Ordnerdialog im isolierten AppImage tatsä
 Abschließend geprüfter Stand einschließlich Ordnerdialog: [Lauf 41070627636](https://github.com/TimBooH/VELUNO/actions/runs/41070627636), [Artefakt 12983369990](https://github.com/TimBooH/VELUNO/actions/runs/41070627636/artifacts/12983369990), Quellcommit `0f2c2efba0ae96e693f8c5cfaaa89af5ab67c73e`. Alle fünf Testsuiten sowie Import und Ordnerdialog im isolierten AppImage bestanden. Dieser Stand ist dem oben dokumentierten früheren Artefakt vorzuziehen.
 
 SMB-Ergänzung: [Lauf 41089751941](https://github.com/TimBooH/VELUNO/actions/runs/41089751941), [Artefakt 12993657178](https://github.com/TimBooH/VELUNO/actions/runs/41089751941/artifacts/12993657178), Quellcommit `8a5730a7e2b965f46de4ff6c8d668f3c658391c2`. Alle sechs Testsuiten und isolierten Paketprüfungen bestanden. Für SMB werden auf dem Zielsystem zusätzlich `kio-fuse` und `kio-extras` sowie eine funktionierende KDE-Sitzungsverbindung benötigt. Diese Hostdienste werden nicht ins AppImage gepackt. Ein echter NAS-/KDE-Anmeldetest bleibt offen.
+
+
+## Gesamtfunktionsausbau
+
+Der neue Stand testet acht Suiten. OpenSSL-TLS-Backend und libssl/libcrypto werden ausdrücklich mitgenommen; isolierte Pakettests verlangen ein funktionsfähiges TLS-Backend, Medienimport und geöffneten Ordnerdialog. Der begrenzte Starttest verwendet Null-Audio; echte Ausgabe ist Zielsystemabnahme. build-info.json liegt neben AppImage/Prüfsumme im Artefakt und enthält Version, UTC-Buildzeit und Schema.
+
+create_update_manifest.py erzeugt ein Ed25519-signiertes Manifest ausschließlich lokal. Eine dauerhafte HTTPS-Quelle und der öffentliche Prüfschlüssel werden später vom Nutzer in der App hinterlegt. Das Werkzeug veröffentlicht nichts und besitzt keinen privaten Schlüssel im Repository. Details und Beispiel: FULL_BUILD.md.

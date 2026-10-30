@@ -1,5 +1,5 @@
 # backup
 
-Konsistente Sicherung, Rotation und vollständige Wiederherstellung; noch nicht implementiert.
+BackupService erzeugt konsistente SQLite-Snapshots mit referenzierten Bildern, SHA-256-Manifest, Tagesrotation und vollständiger Wiederherstellung beim Neustart.
 
-Dieser reservierte Modulort enthält noch keine ausführbare Fachlogik.
+Siehe [FULL_BUILD.md](../../docs/FULL_BUILD.md) für Bedienung, Nachweise und Grenzen.
