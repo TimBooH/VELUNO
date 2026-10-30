@@ -16,7 +16,7 @@ sudo pacman -S --needed base-devel cmake ninja qt6-base qt6-declarative qt6-wayl
 Debian 13 / Ubuntu 24.04:
 
 ```sh
-sudo apt install build-essential cmake ninja-build pkg-config qt6-base-dev qt6-declarative-dev libqt6sql6-sqlite libmpv-dev qt6-wayland qml6-module-qtqml qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-dialogs qml6-module-qtquick-layouts qml6-module-qtquick-window qml6-module-qtqml-workerscript qml6-module-qtquick-templates qml6-module-qttest ffmpeg weston
+sudo apt install build-essential cmake ninja-build pkg-config qt6-base-dev qt6-declarative-dev libqt6sql6-sqlite libmpv-dev qt6-wayland qml6-module-qtqml qml6-module-qtqml-models qml6-module-qtquick-shapes qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-dialogs qml6-module-qtquick-layouts qml6-module-qtquick-window qml6-module-qtqml-workerscript qml6-module-qtquick-templates qml6-module-qttest ffmpeg weston
 ```
 
 ```sh

@@ -112,3 +112,7 @@ Zusätzlich bestand der Programmstart mit Bibliotheksimport nativ unter Wayland 
 Nicht blockierende Paketierungshinweise bleiben: bereits bearbeitete ELF-Dateien werden nicht erneut gestrippt, AppStream-Metadaten fehlen und die Paketierungswerkzeuge melden veraltete Ausgabebezeichner; Actions meldet Node-API-Abkündigungen. Die isolierte Paketprüfung und der Upload bestanden. CachyOS/KDE, FUSE und reale Medien-/Hardware-Abnahme bleiben offen.
 
 `main` wurde remote als unveränderter leerer Initial-Commit `864b7861add9787915cb714fc7bdf1260167b606` geprüft. Es wurde kein GitHub-Release erstellt. Dieser Nachweis wird als reiner Dokumentationscommit mit `[skip ci]` ergänzt.
+
+### Ergänzende Dialog-/Paketprüfung
+
+Die Detailprüfung des erfolgreichen Paketierungsprotokolls meldete `QtQml.Models` und `QtQuick.Shapes` als fehlend. Der geprüfte Importpfad benötigte diese noch nicht, Qt-Dialog-Fallbacks können sie jedoch verwenden. Beide QML-Laufzeitpakete sind jetzt ausdrücklich in den CI-/Debian-Abhängigkeiten enthalten. Der Assistententest öffnet und schließt zusätzlich den tatsächlichen Qt-Ordnerdialog; die erweiterte QML-Suite bestand lokal. Die native KDE-Portalvariante bleibt separat abzunehmen. Meldungen des statischen Scanners zu Windows/macOS/iOS-Stilen sowie zum in C++ registrierten `Veluno.Player` werden von echten fehlenden Linux-Laufzeitmodulen unterschieden.

@@ -38,6 +38,7 @@ ColumnLayout {
     Label { visible: library.sourceCount === 0; text: "Noch keine Medienordner ausgewählt."; color: theme.muted }
     FolderDialog {
         id: picker
+        objectName: "mediaFolderPicker"
         title: category.currentIndex === 0 ? "Filmordner wählen" : "Serienordner wählen"
         onAccepted: panel.library.addSource(selectedFolder,category.currentIndex === 0 ? "movie" : "series")
     }
