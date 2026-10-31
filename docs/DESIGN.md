@@ -35,3 +35,5 @@ Der Nutzer hat die separate System-Titelleiste ausdrücklich abgewählt. Das nat
 | Feste Headerabstände | Kompakte Abstände und Wortmarke bei kleinen Fenstern | Navigation, Suche, Profil und Fensterknöpfe passen weiterhin bei 980×600 |
 
 [Midnight Blue bei 980×600](screenshots/integrated-window-midnight.png) · [Light Mode bei 980×600](screenshots/integrated-window-light.png). Aufnahmen aus der laufenden Qt-Anwendung mit synthetischen Testdaten. Das Fenster bleibt ein reguläres Linux-Anwendungsfenster; die eigentlichen Move-/Resize-Operationen werden über Qt an den Wayland-Compositor delegiert. KWin-/HiDPI-/Mehrschirm- und echte Pointergesten bleiben Zielgerätetests.
+
+[Geprüfter Unstable-Build mit integrierter Fenstersteuerung](https://github.com/TimBooH/VELUNO/actions/runs/41200798935/artifacts/13042876173) (GitHub-Anmeldung, verfügbar bis 14.11.2026 um 13:25 Uhr Europe/Berlin). Alle acht Testsuiten und AppImage-Prüfungen bestanden; Details im Entwicklungsprotokoll. Enthält auch die vorherige Pixel-/Deckkraftkorrektur des Players.
