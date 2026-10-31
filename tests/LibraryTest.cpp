@@ -41,6 +41,10 @@ class LibraryTest : public QObject {
                                 << 2 << 3;
         QTest::newRow("parent") << "/media/Show/Season 1/S01E02.mkv" << "series" << "Show" << 1
                                 << 2;
+        QTest::newRow("extras-is-a-title")
+            << "/media/Extras.S01E01.mkv" << "series" << "Extras" << 1 << 1;
+        QTest::newRow("specials-is-a-title")
+            << "/media/Specials.2019.mkv" << "movie" << "Specials" << 0 << 0;
         QTest::newRow("alternate-x")
             << "/media/Show/Show.Name.2x03.mkv" << "series" << "Show Name" << 2 << 3;
         QTest::newRow("german-long")

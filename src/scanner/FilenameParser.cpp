@@ -9,7 +9,7 @@ QString clean(QString value) {
     return value.simplified();
 }
 bool seasonFolder(const QString &name) {
-    return QRegularExpression("^(?:(?:season|staffel|s)\\s*0*\\d+|specials|extras)$",
+    return QRegularExpression("^(?:season|staffel|s)\\s*0*\\d+$",
                               QRegularExpression::CaseInsensitiveOption)
         .match(name)
         .hasMatch();
