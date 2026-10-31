@@ -41,7 +41,8 @@ int main(int argc, char **argv) {
     std::setlocale(LC_NUMERIC, "C");
     QCoreApplication::setOrganizationName("VELUNO");
     QCoreApplication::setApplicationName("VELUNO");
-    QCoreApplication::setApplicationVersion("0.1.0-dev");
+    QCoreApplication::setApplicationVersion(
+        veluno::UpdateService::buildInfo().value("version").toString());
     QQuickStyle::setStyle("Basic");
     try {
         if (app.arguments().contains("--smoke-test")) {

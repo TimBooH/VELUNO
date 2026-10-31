@@ -19,6 +19,12 @@
 #ifndef VELUNO_BUILD_UTC
 #define VELUNO_BUILD_UTC "2026-10-30T00:00:00Z"
 #endif
+#ifndef VELUNO_APP_VERSION
+#define VELUNO_APP_VERSION "0.1.0-dev"
+#endif
+#ifndef VELUNO_BUILD_CHANNEL
+#define VELUNO_BUILD_CHANNEL "unstable"
+#endif
 namespace veluno {
 namespace {
 void need(bool value, const char *message) {
@@ -38,7 +44,8 @@ QByteArray fileHash(const QString &path) {
 }
 } // namespace
 QVariantMap UpdateService::buildInfo() {
-    return {{"version", "0.1.0-dev"},
+    return {{"version", VELUNO_APP_VERSION},
+            {"channel", VELUNO_BUILD_CHANNEL},
             {"build", VELUNO_BUILD_UTC},
             {"schema", schemaMigrations().size()},
             {"platform", "linux"},

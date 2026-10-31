@@ -238,7 +238,7 @@ Item {
                 }
                 Label {
                     visible: section === 6
-                    text: qsTr("VELUNO · 0.1.0-dev\nNative Film- und Serienmediathek für Linux\nVELUNO ist ein vorläufiger Arbeitsname.\n\nThis product uses the TMDB API but is not endorsed or certified by TMDB.\nMetadaten und Bilder: The Movie Database (TMDB).")
+                    text: qsTr("VELUNO · %1\nNative Film- und Serienmediathek für Linux\nVELUNO ist ein vorläufiger Arbeitsname.\n\nThis product uses the TMDB API but is not endorsed or certified by TMDB.\nMetadaten und Bilder: The Movie Database (TMDB).").arg(Qt.application.version)
                     color: theme.muted
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true

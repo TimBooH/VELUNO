@@ -188,7 +188,7 @@
 {"Updates","Updates"},
 {"Updates werden geprüft und heruntergeladen. Die Installation startest ausschließlich du. Zuvor wird eine separate Sicherung erstellt.","Updates are checked and downloaded. Only you start installation, preceded by a separate backup."},
 {"VELUNO","VELUNO"},
-{"VELUNO · 0.1.0-dev\nNative Film- und Serienmediathek für Linux\nVELUNO ist ein vorläufiger Arbeitsname.\n\nThis product uses the TMDB API but is not endorsed or certified by TMDB.\nMetadaten und Bilder: The Movie Database (TMDB).","VELUNO · 0.1.0-dev\nNative movie and show library for Linux\nVELUNO is a provisional working name.\n\nThis product uses the TMDB API but is not endorsed or certified by TMDB.\nMetadata and images: The Movie Database (TMDB)."},
+{"VELUNO · %1\nNative Film- und Serienmediathek für Linux\nVELUNO ist ein vorläufiger Arbeitsname.\n\nThis product uses the TMDB API but is not endorsed or certified by TMDB.\nMetadaten und Bilder: The Movie Database (TMDB).","VELUNO · %1\nNative movie and show library for Linux\nVELUNO is a provisional working name.\n\nThis product uses the TMDB API but is not endorsed or certified by TMDB.\nMetadata and images: The Movie Database (TMDB)."},
 {"Verfügbar","Available"},
 {"Vertikale Position (%)","Vertical position (%)"},
 {"Videodatei öffnen","Open video file"},

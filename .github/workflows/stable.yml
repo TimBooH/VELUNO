@@ -1,0 +1,91 @@
+name: Approved stable v0.1.0
+on:
+  push:
+    tags: [v0.1.0]
+permissions:
+  contents: read
+concurrency:
+  group: stable-v0.1.0
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.ref == 'refs/tags/v0.1.0'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify explicit release gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = v0.1.0
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          test -f docs/releases/APPROVAL-v0.1.0.md
+          test -f docs/releases/v0.1.0.md
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential cmake ninja-build pkg-config qt6-base-dev qt6-declarative-dev libqt6sql6-sqlite libmpv-dev libssl-dev qt6-wayland qml6-module-qtqml qml6-module-qtqml-models qml6-module-qtquick-shapes qml6-module-qt-labs-folderlistmodel qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-dialogs qml6-module-qtquick-layouts qml6-module-qtquick-window qml6-module-qtqml-workerscript qml6-module-qtquick-templates qml6-module-qttest libgl1-mesa-dri libegl1 curl file patchelf desktop-file-utils ffmpeg weston dbus-daemon
+      - name: Build approved stable version
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DVELUNO_STABLE_BUILD=ON
+          cmake --build build --parallel 2
+      - name: Test and verify stable identity
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+        run: |
+          ctest --test-dir build --output-on-failure
+          ./build/veluno --build-info > build/stable-info.json
+          python3 -c 'import json; d=json.load(open("build/stable-info.json")); assert d["version"]=="0.1.0" and d["channel"]=="stable"'
+          XDG_DATA_HOME="$RUNNER_TEMP/veluno-stable-smoke" timeout 20s ./build/veluno --smoke-test
+      - name: Package and verify stable AppImage
+        run: packaging/appimage.sh build build/package
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: VELUNO-stable-${{ github.sha }}
+          path: |
+            build/package/VELUNO-0.1.0-x86_64.AppImage
+            build/package/VELUNO-0.1.0-x86_64.AppImage.sha256
+            build/package/build-info.json
+          if-no-files-found: error
+          retention-days: 14
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: v0.1.0
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Retrieve and check tested assets
+        run: |
+          gh run download "$GITHUB_RUN_ID" --name "VELUNO-stable-$GITHUB_SHA" --dir dist
+          cd dist
+          sha256sum --check VELUNO-0.1.0-x86_64.AppImage.sha256
+          python3 -c 'import json; d=json.load(open("build-info.json")); assert d["version"]=="0.1.0" and d["channel"]=="stable"'
+      - name: Stage release and verify uploaded assets
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release already exists; refusing to overwrite it." >&2
+            exit 1
+          fi
+          gh release create "$RELEASE_TAG" --verify-tag --draft --title "VELUNO 0.1.0" --notes-file docs/releases/v0.1.0.md dist/VELUNO-0.1.0-x86_64.AppImage dist/VELUNO-0.1.0-x86_64.AppImage.sha256 dist/build-info.json
+          gh release view "$RELEASE_TAG" --json assets > uploaded-assets.json
+          python3 - <<'PYVERIFY'
+          import json, pathlib
+          assets = {a["name"]: a["size"] for a in json.load(open("uploaded-assets.json"))["assets"]}
+          expected = {p.name: p.stat().st_size for p in pathlib.Path("dist").iterdir() if p.is_file()}
+          assert assets == expected, (assets, expected)
+          PYVERIFY
+      - name: Publish explicitly approved stable release
+        run: gh release edit "$RELEASE_TAG" --draft=false --prerelease=false --latest

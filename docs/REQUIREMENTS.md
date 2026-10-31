@@ -2,7 +2,7 @@
 
 Alle Anforderungen bleiben erhalten. „Geplant“ bedeutet nachgelagerte Implementierung, keine Streichung. Der Gesamtauftrag vom 30.10.2026 umfasst alle fehlenden Softwarebereiche. Zugänge und Updatequelle werden nach Nutzerentscheidung später in den Einstellungen hinterlegt. Zielsystem- und Stable-Abnahmen sind nicht abgeschlossen.
 
-Die ausdrücklichen Entwicklungsfreigaben ersetzen den Planungsstatus des PDFs für die implementierten Bereiche. Die Stable-/Veröffentlichungssperre bleibt bestehen. CMake ist durch den Auftrag bestätigt.
+Die ausdrücklichen Entwicklungsfreigaben ersetzen den Planungsstatus des PDFs für die implementierten Bereiche. Die ausdrückliche Freigabe vom 31.10.2026 erlaubt ausschließlich die Veröffentlichung von v0.1.0 und die Übernahme nach main; spätere Stable-Versionen benötigen eine neue Freigabe. CMake ist durch den Auftrag bestätigt.
 
 | ID | Anforderung | Status dieser Stufe |
 | --- | --- | --- |
@@ -81,7 +81,7 @@ Die ausdrücklichen Entwicklungsfreigaben ersetzen den Planungsstatus des PDFs f
 | TECH-003 | Linux-Integration | Dateidialoge, Gerätewahl, D-Bus-Benachrichtigungen und KIO-FUSE integriert; reale KDE-Abnahme offen |
 | TECH-004 | Datenbanksicherheit | Migrationen 1–4, WAL, Transaktionen, Konsistenzprüfung, Snapshots und Wiederherstellung implementiert |
 | REL-001 | Ein Repository | Ein Repository mit main und unstable |
-| REL-002 | Entwicklungszweig | Nur unstable geändert; main bleibt freigegebener leerer Initial-Commit |
+| REL-002 | Entwicklungszweig | Entwicklung ausschließlich auf unstable; getesteter v0.1.0-Stand nach ausdrücklicher Freigabe nach main übernommen |
 | REL-003 | Testbuilds | Actions testet vor AppImage-Artefakt; aktueller Nachweis im Entwicklungsprotokoll |
 | REL-004 | Release-Gate | Prozessregel berücksichtigt |
 | Q-001 | Datenintegrität | Medien-Hashes, Profilisolation, Snapshot-/Restore- und Updatefehlerfälle automatisiert geprüft |

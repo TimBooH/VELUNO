@@ -27,9 +27,18 @@ export QMAKE=${QMAKE:-qmake6}
 export QML_SOURCES_PATHS="$project_root/qml"
 export EXTRA_QT_MODULES="waylandcompositor"
 export EXTRA_PLATFORM_PLUGINS="libqoffscreen.so;libqwayland-egl.so;libqwayland-generic.so"
-export OUTPUT="VELUNO-0.1.0-unstable-x86_64.AppImage"
-export VERSION="0.1.0-dev"
 "$build_dir/veluno" --build-info > "$output_dir/build-info.json"
+VERSION=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$output_dir/build-info.json")
+release_channel=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["channel"])' "$output_dir/build-info.json")
+if [[ "$release_channel" == stable && "$VERSION" != *-* ]]; then
+    OUTPUT="VELUNO-$VERSION-x86_64.AppImage"
+elif [[ "$release_channel" == unstable && "$VERSION" == *-dev ]]; then
+    OUTPUT="VELUNO-${VERSION%-dev}-unstable-x86_64.AppImage"
+else
+    echo "Build version and channel do not match; refusing to package." >&2
+    exit 1
+fi
+export OUTPUT VERSION
 qt_plugins=$("$QMAKE" -query QT_INSTALL_PLUGINS)
 if [[ ! -d "$qt_plugins/tls" && -n "${PKG_CONFIG_SYSROOT_DIR:-}" ]]; then qt_plugins="$PKG_CONFIG_SYSROOT_DIR$qt_plugins"; fi
 mkdir -p "$app_dir/usr/plugins/tls"

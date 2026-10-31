@@ -1,7 +1,11 @@
-# VELUNO · 0.1.0-dev
+# VELUNO · 0.1.0
 
 Native Film- und Serienmediathek für Linux. VELUNO ist ein vorläufiger Arbeitsname.
-Dieser Entwicklungsstand enthält Bibliothek/SMB, Player, Profile, Favoriten/Sammlungen, Fortschritt und Serienwechsel, optionale TMDB-Metadaten, Datensicherung sowie den konfigurierbaren signierten Update-Client. Er ist kein freigegebener Stable-Stand. Bedienung, Schutzregeln und Testgrenzen: [vollständiger Funktionsausbau](docs/FULL_BUILD.md).
+Dieser Entwicklungsstand enthält Bibliothek/SMB, Player, Profile, Favoriten/Sammlungen, Fortschritt und Serienwechsel, optionale TMDB-Metadaten, Datensicherung sowie den konfigurierbaren signierten Update-Client. Version 0.1.0 ist ausdrücklich als erster Stable-Stand freigegeben; offene Zielsystem- und Anbieterprüfungen bleiben dokumentiert. Bedienung, Schutzregeln und Testgrenzen: [vollständiger Funktionsausbau](docs/FULL_BUILD.md).
+
+## Stable herunterladen
+
+[VELUNO 0.1.0 – Release und AppImage](https://github.com/TimBooH/VELUNO/releases/tag/v0.1.0). AppImage herunterladen, ausführbar machen und starten. Die Release-Dateien bleiben dauerhaft erreichbar. `main` enthält den freigegebenen Stand; Entwicklung erfolgt weiterhin auf `unstable`. [Versionshinweise und bekannte Grenzen](docs/releases/v0.1.0.md).
 
 ## Linux-Build
 
@@ -25,6 +29,8 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ./build/veluno
 ```
+
+Der Standard-Build bleibt ein Entwicklungsbuild (`0.1.0-dev`, Kanal `unstable`). Für den freigegebenen Stable-Quellstand zusätzlich `-DVELUNO_STABLE_BUILD=ON` an CMake übergeben.
 
 Für einen nativen Wayland-Start in einer laufenden Sitzung:
 
@@ -69,8 +75,8 @@ Die Tests benötigen FFmpeg für synthetische Testvideos. Wenn Weston installier
 ## Entwicklungsregeln
 
 - Ein Repository, Entwicklung ausschließlich auf `unstable`.
-- `main` enthält vorerst ausschließlich den ausdrücklich erlaubten leeren Initial-Commit.
-- Kein Release-/Publish-Workflow. Unstable-Pakete ausschließlich als Actions-Artefakte nach Tests.
-- Der technische Entwicklungsstand wurde nach ausdrücklicher Freigabe auf `unstable` übertragen. Stable-Releases benötigen weiterhin eine gesonderte Freigabe.
+- `main` enthält den ausdrücklich freigegebenen Stand v0.1.0.
+- Unstable-Pakete ausschließlich als Actions-Artefakte nach Tests. Der auf v0.1.0 begrenzte Stable-Workflow veröffentlicht den ausdrücklich freigegebenen Release nach erneuten Prüfungen.
+- Die konkrete Freigabe für v0.1.0 ist dokumentiert. Weitere Stable-Releases benötigen eine neue ausdrückliche Freigabe.
 
 [Funktionsausbau](docs/FULL_BUILD.md) · [Architektur](docs/ARCHITECTURE.md) · [Entwicklungsprotokoll](docs/DEVELOPMENT.md) · [Anforderungsstatus](docs/REQUIREMENTS.md) · [Pflichtenheft](docs/VELUNO_v0.1.0_Gesamt-Pflichtenheft.pdf)
