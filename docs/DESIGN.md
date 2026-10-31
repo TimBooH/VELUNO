@@ -23,3 +23,15 @@ Die folgenden Screenshots stammen aus der laufenden Qt-6.4.2-Anwendung im Oberfl
 Automatisiert geprüft: Öffnen/Schließen, echtes Fortsetzen im integrierten Player, Favoritenschalter mit Maus und Leertaste, Filmversion/Zuordnung, Serien-/Staffelwahl, Sammlungs- und Metadatenaktionen, defektes Poster, horizontale Navigation und beide Designs. Vollständige Testergebnisse und GitHub-Paketnachweis im Entwicklungsprotokoll. KWin/HiDPI und reale Nutzerbibliothek bleiben Zielgerätetests.
 
 [Geprüften Unstable-Build herunterladen](https://github.com/TimBooH/VELUNO/actions/runs/41196668508/artifacts/13041232704) (GitHub-Anmeldung erforderlich; verfügbar bis 14.11.2026, 12:27 Uhr Europe/Berlin). [Erfolgreicher Actions-Lauf](https://github.com/TimBooH/VELUNO/actions/runs/41196668508): alle acht Suiten sowie die AppImage-Prüfungen bestanden.
+
+## Integrierte Fenstersteuerung · 31.10.2026
+
+Der Nutzer hat die separate System-Titelleiste ausdrücklich abgewählt. Das native Hauptfenster verwendet jetzt einen rahmenlosen Fenstermodus mit Fenstersteuerung in der Navigation.
+
+| Before | After | Why |
+| --- | --- | --- |
+| System-Titelleiste über dem VELUNO-Header | Minimieren, Maximieren/Wiederherstellen und Schließen im gemeinsamen VELUNO-Header | Ein zusammenhängendes Design in beiden Themes |
+| Systemrahmen als einzige Verschiebe-/Resizefläche | Ziehen an freien Headerflächen, Doppelklick und acht native Resize-Ränder/-Ecken | Die Fenstergesten bleiben ohne separate Titelleiste erreichbar |
+| Feste Headerabstände | Kompakte Abstände und Wortmarke bei kleinen Fenstern | Navigation, Suche, Profil und Fensterknöpfe passen weiterhin bei 980×600 |
+
+[Midnight Blue bei 980×600](screenshots/integrated-window-midnight.png) · [Light Mode bei 980×600](screenshots/integrated-window-light.png). Aufnahmen aus der laufenden Qt-Anwendung mit synthetischen Testdaten. Das Fenster bleibt ein reguläres Linux-Anwendungsfenster; die eigentlichen Move-/Resize-Operationen werden über Qt an den Wayland-Compositor delegiert. KWin-/HiDPI-/Mehrschirm- und echte Pointergesten bleiben Zielgerätetests.

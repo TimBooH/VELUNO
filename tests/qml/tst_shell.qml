@@ -604,6 +604,48 @@ TestCase {
         verify(playback.title.indexOf("S2E1") >= 0);
         shell.closePlayer();
     }
+    function test_integratedWindowControls() {
+        verify((shell.flags & Qt.FramelessWindowHint) !== 0);
+        let resize = findChild(shell, "windowResizeHandles");
+        tryCompare(resize, "visible", true);
+        compare(resize.width, shell.width);
+        compare(resize.height, shell.height);
+        mouseClick(findChild(shell, "windowMaximize"));
+        tryCompare(shell, "visibility", Window.Maximized);
+        tryCompare(resize, "visible", false);
+        mouseClick(findChild(shell, "windowMaximize"));
+        tryCompare(shell, "visibility", Window.Windowed);
+        tryCompare(resize, "visible", true);
+        let drag = findChild(shell, "windowDragArea");
+        mouseDoubleClickSequence(drag, drag.width / 2, 9);
+        tryCompare(shell, "visibility", Window.Maximized);
+        shell.showNormal();
+        tryCompare(shell, "visibility", Window.Windowed);
+        shell.width = 980;
+        shell.height = 600;
+        waitForRendering(shell.contentItem);
+        let close = findChild(shell, "windowClose");
+        let search = findChild(shell, "globalSearch");
+        let profile = findChild(shell, "profileButton");
+        verify(close.mapToItem(drag, 0, 0).x + close.width <= drag.width);
+        verify(search.mapToItem(drag, 0, 0).x + search.width <= profile.mapToItem(drag, 0, 0).x);
+        appSettings.theme = "light";
+        wait(40);
+        waitForRendering(shell.contentItem);
+        if (screenshotDirectory.length > 0)
+            grabImage(shell.contentItem.parent).save(screenshotDirectory + "/integrated-window-light.png");
+        appSettings.theme = "midnight";
+        wait(40);
+        waitForRendering(shell.contentItem);
+        if (screenshotDirectory.length > 0)
+            grabImage(shell.contentItem.parent).save(screenshotDirectory + "/integrated-window-midnight.png");
+        mouseClick(findChild(shell, "windowMinimize"));
+        tryCompare(shell, "visibility", Window.Minimized);
+        shell.showNormal();
+        tryCompare(shell, "visibility", Window.Windowed);
+        mouseClick(close);
+        tryCompare(shell, "visible", false);
+    }
     function test_regularWindow() {
         compare(shell.title, "VELUNO");
         if (screenshotDirectory.length > 0) {

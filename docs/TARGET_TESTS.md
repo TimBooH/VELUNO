@@ -18,3 +18,7 @@ Für Fehler sind der genaue Text unter Einstellungen → Bibliothek, der betroff
 ## Nachprüfung der Nutzeraufnahme vom 31.10.2026
 
 Den neuen Unstable-Build mit derselben Datei (gegebenenfalls über SMB) starten: Das Videobild muss deckend bleiben, Grau-/Hauttöne dürfen nicht durch UI-Farben aufgehellt werden. Mehrfach Bibliothek → Fortsetzen → Zurück wechseln, pausieren, Vollbild und Fenstergröße wechseln. Hinter dem Player darf keine Bibliothek durchscheinen; nach Zurück darf kein Videorest sichtbar bleiben. Die Puffer-/Qt-Paint-Ursache ist automatisiert nachgewiesen und korrigiert; die konkrete Aufnahme und Hardware sind hier nicht als vollständig nachgetestet markiert. Bei verbleibender Überhellung zusätzlich Codec, Hardwaredecoder und HDR-/Farbraum des betreffenden Mediums prüfen.
+
+## Integrierte Fenstersteuerung
+
+Unter CachyOS/KWin/Wayland den neuen Unstable-Build öffnen: keine zusätzliche System-Titelleiste; Minimieren, Maximieren/Wiederherstellen und Schließen rechts im VELUNO-Header. Ziehen an einer freien Kopfzeilenfläche bzw. am Schriftzug, Doppelklick und Größenänderung an allen vier Kanten und vier Ecken prüfen. Anschließend Snapping, Wiederherstellen aus Maximierung, Fullscreen/Zurück, 100/150/200 % Skalierung und Wechsel zwischen Bildschirmen prüfen. Bei 980×600 müssen alle Navigationsbereiche, Suchfeld und Profilmenü neben den Fensterknöpfen bedienbar bleiben. Qt-Zustandswechsel/Buttons/Layout und nativer Wayland-Start sind automatisiert/lokal geprüft; echte KWin-Pointeroperationen bleiben offen.

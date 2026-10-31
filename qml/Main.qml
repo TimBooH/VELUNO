@@ -16,6 +16,14 @@ ApplicationWindow {
     minimumWidth: 980
     minimumHeight: 600
     visible: true
+    flags: Qt.Window | Qt.FramelessWindowHint
+    readonly property bool compactHeader: width < 1180
+    function toggleMaximized() {
+        if (visibility === Window.Maximized)
+            showNormal();
+        else
+            showMaximized();
+    }
     title: qsTr("VELUNO")
     color: colors.background
     readonly property QtObject updateService: updates
@@ -141,6 +149,8 @@ ApplicationWindow {
     palette.light: colors.raised
     palette.placeholderText: colors.muted
     header: Rectangle {
+        id: navigationHeader
+        objectName: "navigationHeader"
         color: colors.background
         height: visible ? 80 : 0
         visible: window.visibility !== Window.FullScreen
@@ -150,23 +160,43 @@ ApplicationWindow {
             height: 1
             color: colors.surface
         }
+        MouseArea {
+            id: windowDrag
+            objectName: "windowDragArea"
+            anchors.fill: parent
+            property point origin
+            property bool moving: false
+            acceptedButtons: Qt.LeftButton
+            onPressed: function (mouse) {
+                origin = Qt.point(mouse.x, mouse.y);
+                moving = false;
+            }
+            onPositionChanged: function (mouse) {
+                if (pressed && !moving && Math.abs(mouse.x - origin.x) + Math.abs(mouse.y - origin.y) >= Qt.styleHints.startDragDistance) {
+                    moving = true;
+                    window.startSystemMove();
+                }
+            }
+            onDoubleClicked: window.toggleMaximized()
+        }
         RowLayout {
             anchors.fill: parent
-            anchors.leftMargin: 40
-            anchors.rightMargin: 40
-            spacing: 6
+            anchors.leftMargin: window.compactHeader ? 24 : 40
+            anchors.rightMargin: 8
+            spacing: window.compactHeader ? 2 : 6
             Label {
                 text: qsTr("VELUNO")
-                font.pixelSize: 24
+                font.pixelSize: window.compactHeader ? 20 : 24
                 font.weight: Font.Bold
                 font.letterSpacing: 2
                 color: colors.accent
-                Layout.rightMargin: 22
+                Layout.rightMargin: window.compactHeader ? 8 : 22
             }
             Repeater {
                 model: window.navigation
                 NavButton {
                     required property string modelData
+                    padding: window.compactHeader ? 6 : 10
                     theme: colors
                     text: qsTr(modelData)
                     selected: currentPage === modelData
@@ -181,7 +211,7 @@ ApplicationWindow {
             }
             TextField {
                 id: globalSearch
-                Layout.preferredWidth: Math.max(140, Math.min(220, window.width - 860))
+                Layout.preferredWidth: Math.max(140, Math.min(220, window.width - 980))
                 placeholderText: qsTr("Filme und Serien suchen")
                 leftPadding: 14
                 background: Rectangle {
@@ -211,9 +241,9 @@ ApplicationWindow {
                         refresh();
                     else
                         Qt.callLater(function () {
-                            if (!searchPopup.activeFocus)
-                                searchPopup.close();
-                        });
+                                if (!searchPopup.activeFocus)
+                                    searchPopup.close();
+                            });
                 }
                 Keys.onDownPressed: searchResults.currentIndex = Math.min(searchResults.currentIndex + 1, matches.length - 1)
                 Keys.onUpPressed: searchResults.currentIndex = Math.max(0, searchResults.currentIndex - 1)
@@ -242,7 +272,8 @@ ApplicationWindow {
                         clip: true
                         model: globalSearch.matches
                         currentIndex: -1
-                        ScrollBar.vertical: ScrollBar {}
+                        ScrollBar.vertical: ScrollBar {
+                        }
                         delegate: ItemDelegate {
                             required property var modelData
                             width: ListView.view.width
@@ -319,7 +350,8 @@ ApplicationWindow {
                         text: qsTr("Datei abspielen…")
                         onTriggered: videoFileDialog.open()
                     }
-                    MenuSeparator {}
+                    MenuSeparator {
+                    }
                     MenuItem {
                         objectName: "settingsMenuItem"
                         text: qsTr("Einstellungen")
@@ -330,7 +362,21 @@ ApplicationWindow {
                     }
                 }
             }
+            WindowControls {
+                theme: colors
+                targetWindow: window
+                Layout.leftMargin: window.compactHeader ? 4 : 12
+                Layout.preferredWidth: implicitWidth
+                Layout.preferredHeight: 40
+            }
         }
+    }
+    WindowResizeHandles {
+        // The outer content root includes the header and footer. The inner
+        // content area alone would leave the top and bottom edges uncovered.
+        parent: window.contentItem.parent
+        anchors.fill: parent
+        targetWindow: window
     }
     LibraryPage {
         personal: window.personalData
@@ -487,6 +533,7 @@ ApplicationWindow {
             elide: Text.ElideRight
             verticalAlignment: Text.AlignVCenter
         }
-        background: Item {}
+        background: Item {
+        }
     }
 }

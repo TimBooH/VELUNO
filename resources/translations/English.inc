@@ -274,3 +274,7 @@
 {"Wiederholen prüft den betroffenen Medienordner erneut. Dateipfade können für die Fehlersuche markiert und kopiert werden.","Retry rescans the affected media folder. Select and copy file paths to diagnose errors."},
 {"Zugang prüfen","Test access"},
 {"Software-Decodierung","Software decoding"},
+
+{"Minimieren","Minimize"},
+{"Maximieren","Maximize"},
+{"Wiederherstellen","Restore"},
