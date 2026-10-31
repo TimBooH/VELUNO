@@ -1,6 +1,6 @@
 # Anforderungsstatus · 0.1.0-dev
 
-Alle Anforderungen bleiben erhalten. „Geplant“ bedeutet nachgelagerte Implementierung, keine Streichung. Der Gesamtauftrag vom 30.10.2026 umfasst alle fehlenden Softwarebereiche. Zugänge und Updatequelle werden nach Nutzerentscheidung später in den Einstellungen hinterlegt. Zielsystem- und Stable-Abnahmen sind nicht abgeschlossen.
+Alle Anforderungen bleiben erhalten. „Geplant“ bedeutet nachgelagerte Implementierung, keine Streichung. Der Gesamtauftrag vom 30.10.2026 umfasst alle fehlenden Softwarebereiche. Zugänge und Updatequelle werden nach Nutzerentscheidung später in den Einstellungen hinterlegt. Die Zielsystemabnahme ist nicht abgeschlossen; Stable v0.1.0 wurde am 31.10.2026 ausdrücklich freigegeben und veröffentlicht.
 
 Die ausdrücklichen Entwicklungsfreigaben ersetzen den Planungsstatus des PDFs für die implementierten Bereiche. Die ausdrückliche Freigabe vom 31.10.2026 erlaubt ausschließlich die Veröffentlichung von v0.1.0 und die Übernahme nach main; spätere Stable-Versionen benötigen eine neue Freigabe. CMake ist durch den Auftrag bestätigt.
 
@@ -83,13 +83,13 @@ Die ausdrücklichen Entwicklungsfreigaben ersetzen den Planungsstatus des PDFs f
 | REL-001 | Ein Repository | Ein Repository mit main und unstable |
 | REL-002 | Entwicklungszweig | Entwicklung ausschließlich auf unstable; getesteter v0.1.0-Stand nach ausdrücklicher Freigabe nach main übernommen |
 | REL-003 | Testbuilds | Actions testet vor AppImage-Artefakt; aktueller Nachweis im Entwicklungsprotokoll |
-| REL-004 | Release-Gate | Prozessregel berücksichtigt |
+| REL-004 | Release-Gate | v0.1.0 ausdrücklich freigegeben; Tag/main-Gleichheit, Tests, Paketprüfung und Draft-Assets vor Veröffentlichung geprüft |
 | Q-001 | Datenintegrität | Medien-Hashes, Profilisolation, Snapshot-/Restore- und Updatefehlerfälle automatisiert geprüft |
 | Q-002 | Responsivität | Scan/Backup/Bildverarbeitung/Installationskopie auf Worker; Netzwerk asynchron; Großbibliotheksabnahme offen |
 | Q-003 | Fehlertoleranz | Defekte Dateien, Offline-Quellen, Abbruch, Metadatenfehler, beschädigte Sicherungen und ungültige Updates geprüft |
 | Q-004 | Barrierearme Bedienung | Fokus/Standarddialoge/lesbare Themes; vollständige Screenreader-/HiDPI-Abnahme offen |
-| O-001 | · Finale Produktbezeichnung / Markenprüfung | Arbeitsname bleibt; finale Markenprüfung vor Stable offen |
-| O-002 | · Metadatenanbieter / Rechtliches | TMDB-Anbindung optional implementiert; aktuelle Bedingungen/Logo/Bildrechte und echter Zugang vor produktiver Auslieferung offen |
+| O-001 | · Finale Produktbezeichnung / Markenprüfung | Arbeitsname bleibt; finale Markenprüfung weiterhin offen und in den Releasehinweisen ausgewiesen |
+| O-002 | · Metadatenanbieter / Rechtliches | TMDB-Anbindung optional implementiert; aktuelle Bedingungen/Logo/Bildrechte und echter Zugang weiterhin offen; in den Releasehinweisen ausgewiesen |
 | O-003 | · libmpv + Qt-Rendering | Offizielle Software-Render-API unter Wayland getestet; Zielhardware/HiDPI offen |
 | O-004 | · Codec, HDR und GPU | Decoderwahl/Fallback konfigurierbar; echte GPU-, Codec- und HDR-Matrix offen |
 | O-005 | · Abspannerkennung | Benannte Kapitel/manueller Marker/Ende-Fallback umgesetzt; keine behauptete Bildinhalts-Erkennung |
@@ -102,4 +102,4 @@ Die ausdrücklichen Entwicklungsfreigaben ersetzen den Planungsstatus des PDFs f
 | CTRL-002 | Keine stillschweigende Entwicklungsfreigabe | Prozessregel berücksichtigt |
 | CTRL-003 | Keine stillschweigende Stable-Freigabe | Prozessregel berücksichtigt |
 
-Die implementierten Softwarefunktionen ersetzen keine Zielsystem-, Anbieter-, Updatequellen- oder Stable-Abnahme. Die verbleibenden Nachweise stehen einzeln in O-001 bis O-010 und in FULL_BUILD.md.
+Die konkrete Nutzerfreigabe für Stable v0.1.0 ersetzt keine Zielsystem-, Anbieter- oder Updatequellenprüfung und erteilt keine Freigabe zukünftiger Stable-Versionen. Die verbleibenden Nachweise stehen einzeln in O-001 bis O-010 und in FULL_BUILD.md.

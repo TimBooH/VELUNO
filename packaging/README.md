@@ -30,3 +30,5 @@ Aktueller Gesamtfunktionsstand: [Lauf 41104725560](https://github.com/TimBooH/VE
 ## Freigegebene Stable-Version 0.1.0
 
 Die ausdrückliche Nutzerfreigabe ist in `docs/releases/APPROVAL-v0.1.0.md` dokumentiert. `stable.yml` reagiert ausschließlich auf den manuell gesetzten Tag `v0.1.0`, prüft dessen Gleichheit mit main und baut mit `VELUNO_STABLE_BUILD=ON`. Nach allen acht Testsuiten und den isolierten AppImage-Tests werden AppImage, Prüfsumme und Buildinformationen zunächst in einen Entwurf hochgeladen und auf Vollständigkeit geprüft; erst danach wird der Release öffentlich. Normale Branch-Pushes veröffentlichen keinen Stable-Release. Der Standard-Build und unstable.yml bleiben Entwicklungsbuilds. Weitere Versionsfreigaben sind nicht enthalten.
+
+Veröffentlicht: [Stable v0.1.0](https://github.com/TimBooH/VELUNO/releases/tag/v0.1.0), [erfolgreicher Release-Lauf 41159123633](https://github.com/TimBooH/VELUNO/actions/runs/41159123633). Alle drei öffentlichen Asset-URLs wurden abgerufen; die AppImage-Prüfsumme stimmt. Vollständiger Nachweis im Entwicklungsprotokoll.

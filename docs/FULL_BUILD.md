@@ -1,6 +1,6 @@
 # Funktionsausbau nach Gesamtauftrag vom 30.10.2026
 
-Der Nutzer hat die Implementierung des gesamten fehlenden Funktionsumfangs autorisiert. TMDB-Zugang und dauerhafte Updatequelle sollen später in den Einstellungen hinterlegt werden. Das autorisiert keine Stable-Veröffentlichung und keine Änderung an main. Alle bisherigen Daten werden über Migrationen ergänzt; Quelldateien werden nicht verändert.
+Der Nutzer hat die Implementierung des gesamten fehlenden Funktionsumfangs autorisiert. TMDB-Zugang und dauerhafte Updatequelle sollen später in den Einstellungen hinterlegt werden. Dieser damalige Entwicklungsauftrag allein autorisierte keine Stable-Veröffentlichung oder Änderung an main. Die gesonderte ausdrückliche Freigabe vom 31.10.2026 wurde inzwischen für [Stable v0.1.0](https://github.com/TimBooH/VELUNO/releases/tag/v0.1.0) umgesetzt; [Freigabeprotokoll](releases/APPROVAL-v0.1.0.md). Offene Nachweise bleiben in den Releasehinweisen ausgewiesen. Alle bisherigen Daten werden über Migrationen ergänzt; Quelldateien werden nicht verändert.
 
 ## Bedienung
 
