@@ -21,3 +21,5 @@ Die folgenden Screenshots stammen aus der laufenden Qt-6.4.2-Anwendung im Oberfl
 - [Seriendetails / 980×600 ohne Hintergrundbild](screenshots/design-series-compact.png)
 
 Automatisiert geprüft: Öffnen/Schließen, echtes Fortsetzen im integrierten Player, Favoritenschalter mit Maus und Leertaste, Filmversion/Zuordnung, Serien-/Staffelwahl, Sammlungs- und Metadatenaktionen, defektes Poster, horizontale Navigation und beide Designs. Vollständige Testergebnisse und GitHub-Paketnachweis im Entwicklungsprotokoll. KWin/HiDPI und reale Nutzerbibliothek bleiben Zielgerätetests.
+
+[Geprüften Unstable-Build herunterladen](https://github.com/TimBooH/VELUNO/actions/runs/41196668508/artifacts/13041232704) (GitHub-Anmeldung erforderlich; verfügbar bis 14.11.2026, 12:27 Uhr Europe/Berlin). [Erfolgreicher Actions-Lauf](https://github.com/TimBooH/VELUNO/actions/runs/41196668508): alle acht Suiten sowie die AppImage-Prüfungen bestanden.
