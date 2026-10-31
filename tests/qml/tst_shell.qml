@@ -277,6 +277,19 @@ TestCase {
         }
         mouseClick(findChild(shell, "playbackDiagnosticsClose"));
         tryCompare(diagnostics, "opened", false);
+        mouseClick(findChild(shell, "trackMenuButton"));
+        let tracks = findChild(shell, "playerTracks");
+        tryCompare(tracks, "opened", true);
+        playback.openFile(testInput.videoFixture);
+        tryCompare(playback, "loading", false, 10000);
+        for (let size of [[980, 600], [1240, 800], [1050, 650], [1240, 800]]) {
+            shell.width = size[0];
+            shell.height = size[1];
+            waitForRendering(shell.contentItem);
+        }
+        verify(tracks.opened);
+        mouseClick(findChild(shell, "tracksCloseButton"));
+        tryCompare(tracks, "opened", false);
         tryCompare(page, "overlayVisible", false, 4500);
         mouseMove(page, page.width / 2, page.height / 2);
         tryCompare(page, "overlayVisible", true);
@@ -285,6 +298,7 @@ TestCase {
         wait(2100);
         verify(page.overlayVisible);
         let timeline = findChild(shell, "timeline");
+        waitForRendering(shell.contentItem);
         mouseClick(timeline, timeline.width / 2, timeline.height / 2);
         tryVerify(function () {
             return playback.position > 5 && playback.position < 9;
@@ -298,6 +312,28 @@ TestCase {
         shell.closePlayer();
         compare(playback.active, false);
         compare(shell.playerVisible, false);
+    }
+    function test_timelineHandleKeepsPositionOnPress() {
+        shell.playerVisible = true;
+        playback.openFile(testInput.videoFixture);
+        tryCompare(playback, "loading", false, 10000);
+        tryVerify(function () {
+            return playback.duration > 13;
+        });
+        playback.togglePause();
+        tryCompare(playback, "paused", true);
+        playback.seek(9);
+        tryVerify(function () {
+            return playback.position > 8.8;
+        });
+        let timeline = findChild(shell, "timeline");
+        waitForRendering(shell.contentItem);
+        let before = timeline.value;
+        mousePress(timeline, timeline.handle.x + timeline.handle.width / 2, timeline.handle.y + timeline.handle.height / 2);
+        let held = timeline.value;
+        mouseRelease(timeline, timeline.handle.x + timeline.handle.width / 2, timeline.handle.y + timeline.handle.height / 2);
+        verify(Math.abs(held - before) < 0.3, "Pressing the seek handle must not reset its position");
+        shell.closePlayer();
     }
     function test_profileSettingsAndTheme() {
         let profile = findChild(shell, "profileButton");

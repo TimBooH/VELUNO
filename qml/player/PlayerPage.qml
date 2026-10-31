@@ -51,7 +51,7 @@ Item {
         id: hideControls
         interval: 2000
         onTriggered: {
-            if (!player.paused && !panelHover.hovered && !headerHover.hovered && !diagnostics.opened)
+            if (!player.paused && !panelHover.hovered && !headerHover.hovered && !diagnostics.opened && !tracks.opened)
                 page.controlsVisible = false;
             else
                 restart();
@@ -97,6 +97,7 @@ Item {
                 Layout.fillWidth: true
                 spacing: 6
                 Button {
+                    objectName: "trackMenuButton"
                     text: qsTr("Spuren")
                     onClicked: tracks.open()
                 }
@@ -137,11 +138,11 @@ Item {
         ScrollView {
             anchors.fill: parent
             contentWidth: availableWidth
-            ColumnLayout {
+            Column {
                 width: parent.width
                 spacing: 12
                 Label {
-                    Layout.fillWidth: true
+                    width: parent.width
                     text: qsTr("Diese Angaben meldet der laufende Player. Nicht gemeldete Werte bestätigen keine Hardwarebeschleunigung.")
                     color: page.theme.muted
                     wrapMode: Text.WordWrap
@@ -175,7 +176,7 @@ Item {
                     ]
                     Label {
                         required property var modelData
-                        Layout.fillWidth: true
+                        width: parent.width
                         text: modelData.label + ": " + (modelData.key === "hwdec-current" && page.player.diagnostics[modelData.key] === "no" ? qsTr("Software-Decodierung") : page.player.diagnostics[modelData.key] || qsTr("Nicht gemeldet"))
                         textFormat: Text.PlainText
                         color: page.theme.text
@@ -254,43 +255,66 @@ Item {
     }
     Popup {
         id: tracks
+        objectName: "playerTracks"
         anchors.centerIn: parent
-        width: 520
+        width: Math.min(parent.width - 48, 520)
         height: Math.min(parent.height - 80, 460)
         modal: true
-        ColumnLayout {
+        onOpened: hideControls.stop()
+        onClosed: page.revealControls()
+        ScrollView {
+            id: trackScroll
             anchors.fill: parent
-            Label {
-                text: qsTr("Audiospuren")
-                color: theme.text
-            }
-            Repeater {
-                model: player.audioTracks
-                Button {
-                    required property var modelData
-                    text: (modelData.lang || "") + " · " + (modelData.title || "Spur " + modelData.id)
-                    onClicked: player.selectAudio(modelData.id)
+            contentWidth: availableWidth
+            contentHeight: trackColumn.implicitHeight
+            // A positioner safely handles track delegates removed during file changes.
+            // Qt 6.4's layout engine can retain stale Repeater items across resize.
+            Column {
+                id: trackColumn
+                width: trackScroll.availableWidth
+                spacing: 10
+                Label {
+                    text: qsTr("Audiospuren")
+                    color: page.theme.text
                 }
-            }
-            Label {
-                text: qsTr("Untertitel")
-                color: theme.text
-            }
-            Button {
-                text: qsTr("Untertitel aus")
-                onClicked: player.selectSubtitle(0)
-            }
-            Repeater {
-                model: player.subtitleTracks
-                Button {
-                    required property var modelData
-                    text: (modelData.lang || "") + " · " + (modelData.title || "Spur " + modelData.id)
-                    onClicked: player.selectSubtitle(modelData.id)
+                Repeater {
+                    model: player.audioTracks
+                    Button {
+                        required property var modelData
+                        width: trackColumn.width
+                        text: (modelData.selected ? "✓ " : "") + (modelData.lang || "") + " · " + (modelData.title || "Spur " + modelData.id)
+                        onClicked: player.selectAudio(modelData.id)
+                    }
                 }
-            }
-            Button {
-                text: qsTr("Externe Untertitel öffnen")
-                onClicked: externalSubtitles.open()
+                Label {
+                    text: qsTr("Untertitel")
+                    color: page.theme.text
+                }
+                Button {
+                    width: trackColumn.width
+                    text: qsTr("Untertitel aus")
+                    onClicked: player.selectSubtitle(0)
+                }
+                Repeater {
+                    model: player.subtitleTracks
+                    Button {
+                        required property var modelData
+                        width: trackColumn.width
+                        text: (modelData.selected ? "✓ " : "") + (modelData.lang || "") + " · " + (modelData.title || "Spur " + modelData.id)
+                        onClicked: player.selectSubtitle(modelData.id)
+                    }
+                }
+                Button {
+                    width: trackColumn.width
+                    text: qsTr("Externe Untertitel öffnen")
+                    onClicked: externalSubtitles.open()
+                }
+                Button {
+                    objectName: "tracksCloseButton"
+                    width: trackColumn.width
+                    text: qsTr("Schließen")
+                    onClicked: tracks.close()
+                }
             }
         }
     }

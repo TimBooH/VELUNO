@@ -158,6 +158,17 @@ class PlayerTest : public QObject {
         player.stop();
         QCOMPARE(fixtureHash(path), hash);
     }
+    void repeatedOpenRetainsMediaInformation() {
+        veluno::MpvEngine player(nullptr, true);
+        for (int attempt = 0; attempt < 12; ++attempt) {
+            player.openFile(QUrl::fromLocalFile(m_video));
+            QTest::qSleep(150); // Let mpv coalesce notifications while the UI is busy.
+            QTRY_VERIFY_WITH_TIMEOUT(!player.loading(), 10000);
+            QTRY_VERIFY_WITH_TIMEOUT(player.duration() > 13, 3000);
+            QTRY_VERIFY_WITH_TIMEOUT(!player.audioTracks().isEmpty(), 3000);
+        }
+        player.stop();
+    }
     void repeatedOpenAndStop() {
         veluno::MpvEngine player(nullptr, true);
         for (int i = 0; i < 3; ++i) {
