@@ -10,12 +10,13 @@ Button {
     signal playRequested
     objectName: "poster-" + entry.id
     implicitWidth: 180
-    implicitHeight: implicitWidth * 1.5 + 52
+    implicitHeight: implicitWidth * 1.5 + 38
     hoverEnabled: true
     padding: 0
-    scale: hovered && !down ? 1.025 : 1
+    scale: hovered && !down ? 1.035 : 1
     z: hovered || visualFocus ? 2 : 0
-    Behavior on scale {
+    Behavior on scale  {
+        enabled: card.hovered && !card.visualFocus && !card.down
         NumberAnimation {
             duration: 130
             easing.type: Easing.OutCubic
@@ -23,13 +24,14 @@ Button {
     }
     Accessible.name: entry.title + ", " + qsTr("Details öffnen")
     onClicked: detailsRequested()
-    background: Item {}
+    background: Item {
+    }
     contentItem: Item {
         Rectangle {
             id: artwork
             width: parent.width
             height: width * 1.5
-            radius: 5
+            radius: 4
             clip: true
             color: card.theme.surface
             // Typography remains useful offline, including unreadable cached artwork.
@@ -46,27 +48,36 @@ Button {
                     }
                 }
                 Rectangle {
-                    width: parent.width * 0.85
-                    height: width
-                    radius: width / 2
-                    x: parent.width * 0.35
-                    y: parent.height * 0.12
+                    width: parent.width * 0.5
+                    height: parent.height * 1.4
+                    rotation: 28
+                    x: parent.width * 0.6
+                    y: -parent.height * 0.2
                     color: card.theme.accent
-                    opacity: 0.07
+                    opacity: 0.045
+                }
+                Label {
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.margins: 16
+                    text: card.entry.kind === "series" ? qsTr("SERIE") : qsTr("FILM")
+                    font.pixelSize: 10
+                    font.letterSpacing: 2
+                    color: card.theme.muted
                 }
                 Label {
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
                     anchors.margins: 16
-                    anchors.bottomMargin: 32
+                    anchors.bottomMargin: 20
                     text: card.entry.title
                     textFormat: Text.PlainText
-                    font.pixelSize: Math.max(17, card.width * 0.12)
+                    font.pixelSize: Math.max(18, card.width * 0.13)
                     font.weight: Font.Bold
                     color: card.theme.text
                     wrapMode: Text.Wrap
-                    maximumLineCount: 5
+                    maximumLineCount: 4
                     elide: Text.ElideRight
                 }
             }
@@ -87,7 +98,7 @@ Button {
             }
             Rectangle {
                 anchors.fill: parent
-                radius: 5
+                radius: 4
                 color: "transparent"
                 border.width: card.visualFocus ? 2 : 0
                 border.color: card.theme.accent
@@ -131,7 +142,7 @@ Button {
         }
         Label {
             anchors.top: artwork.bottom
-            anchors.topMargin: 10
+            anchors.topMargin: 9
             width: parent.width
             text: card.entry.title
             textFormat: Text.PlainText
@@ -139,15 +150,6 @@ Button {
             font.pixelSize: 13
             font.weight: Font.DemiBold
             color: card.theme.text
-        }
-        Label {
-            anchors.top: artwork.bottom
-            anchors.topMargin: 29
-            width: parent.width
-            text: (card.entry.year > 0 ? card.entry.year + " · " : "") + (card.entry.kind === "series" ? qsTr("Serie") : qsTr("Film"))
-            font.pixelSize: 11
-            color: card.theme.muted
-            elide: Text.ElideRight
         }
     }
 }

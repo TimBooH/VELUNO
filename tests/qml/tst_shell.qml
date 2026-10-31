@@ -360,7 +360,7 @@ TestCase {
         }
         testInput.resetSetupForTests();
         appSettings.theme = "midnight";
-        compare(shell.color, "#0b1426");
+        compare(shell.color, "#080f1c");
         if (screenshotDirectory.length > 0) {
             waitForRendering(shell.contentItem);
             grabImage(shell.contentItem.parent).save(screenshotDirectory + "/midnight.png");
@@ -451,7 +451,7 @@ TestCase {
     function test_detailMoviePresentationAndPlayback() {
         let id = library.search("Example Movie")[0].id;
         metadata.edit(id, "Example Movie", "Ein Film für den lokalen Oberflächentest. Die Beschreibung bleibt auch ohne Internet verfügbar.", 2020);
-        metadata.selectLocalImage(id, "backdrop", testInput.artworkFixtureUrl(3));
+        metadata.selectLocalImage(id, "backdrop", testInput.backdropFixtureUrl());
         testInput.seedDetailProgress(id, 0, 0, 6);
         library.openDetails(id);
         let detail = findChild(shell, "titleDetails");
@@ -468,13 +468,15 @@ TestCase {
         let wasFavorite = personal.isFavorite(id);
         mouseClick(favorite);
         compare(personal.isFavorite(id), !wasFavorite);
-        mouseClick(favorite);
+        favorite.forceActiveFocus();
+        testInput.pressKey(shell, Qt.Key_Space);
+        compare(personal.isFavorite(id), wasFavorite);
         if (screenshotDirectory.length > 0) {
             waitForRendering(shell.contentItem);
             grabImage(shell.contentItem.parent).save(screenshotDirectory + "/title-details-midnight.png");
         }
         appSettings.theme = "light";
-        tryCompare(findChild(shell, "titlePrimaryPlayLabel"), "color", "#ffffff");
+        tryCompare(findChild(shell, "titlePrimaryPlayLabel"), "color", "#101722");
         wait(40);
         if (screenshotDirectory.length > 0) {
             waitForRendering(shell.contentItem);

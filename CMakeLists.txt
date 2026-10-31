@@ -54,7 +54,7 @@ target_link_libraries(veluno_metadata PUBLIC veluno_personal Qt6::Network)
 qt_add_executable(veluno src/app/main.cpp)
 target_link_libraries(veluno PRIVATE veluno_updater veluno_backup veluno_personal veluno_core veluno_player veluno_library veluno_scanner veluno_metadata Qt6::Gui Qt6::Quick Qt6::QuickControls2)
 qt_add_resources(veluno ui PREFIX "/" FILES qml/Main.qml qml/themes/Theme.qml qml/components/NavButton.qml qml/pages/LibraryPage.qml qml/pages/SettingsPage.qml qml/player/PlayerPage.qml
-    qml/components/PosterCard.qml qml/components/PosterShelf.qml qml/components/FolderPanel.qml
+    qml/components/DetailAction.qml qml/components/PosterCard.qml qml/components/PosterShelf.qml qml/components/FolderPanel.qml
     qml/components/ScanPanel.qml qml/components/TitleDetails.qml qml/components/LibraryDialogs.qml qml/wizard/SetupWizard.qml
     qml/components/ContinueShelf.qml qml/pages/ProfilesPage.qml qml/pages/CollectionsPage.qml qml/pages/BackupPage.qml qml/pages/PlayerSettingsPage.qml qml/pages/UpdatesPage.qml)
 install(PROGRAMS ${FFPROBE_EXECUTABLE} DESTINATION ${CMAKE_INSTALL_BINDIR})

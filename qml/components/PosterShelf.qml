@@ -11,13 +11,13 @@ ColumnLayout {
     signal playRequested(var id)
     visible: row.count > 0
     Layout.fillWidth: true
-    spacing: 6
+    spacing: 8
     RowLayout {
         Layout.fillWidth: true
         Label {
             text: shelf.heading
             color: shelf.theme.text
-            font.pixelSize: 21
+            font.pixelSize: 22
             font.weight: Font.DemiBold
             Layout.fillWidth: true
         }
@@ -44,27 +44,34 @@ ColumnLayout {
         id: row
         objectName: "posterRow"
         Layout.fillWidth: true
-        Layout.preferredHeight: 340
+        Layout.preferredHeight: 326
         orientation: ListView.Horizontal
-        spacing: 12
+        spacing: 10
         clip: true
         topMargin: 5
         bottomMargin: 5
         model: shelf.model
         Keys.onPressed: function (event) {
             if (event.key === Qt.Key_Home) {
+                scrollAnimation.stop();
                 positionViewAtBeginning();
                 event.accepted = true;
             } else if (event.key === Qt.Key_End) {
+                scrollAnimation.stop();
                 positionViewAtEnd();
                 event.accepted = true;
             }
         }
         boundsBehavior: Flickable.StopAtBounds
         onMovementStarted: scrollAnimation.stop()
-        function page(direction) {
+        function page(direction, animated) {
             cancelFlick();
-            let target = Math.max(0, Math.min(contentWidth - width, contentX + direction * Math.max(192, width - 192)));
+            let target = Math.max(0, Math.min(contentWidth - width, contentX + direction * Math.max(194, width - 194)));
+            if (animated === false) {
+                scrollAnimation.stop();
+                contentX = target;
+                return;
+            }
             scrollAnimation.to = target;
             scrollAnimation.restart();
         }
@@ -75,15 +82,15 @@ ColumnLayout {
             duration: 220
             easing.type: Easing.OutCubic
         }
-        Keys.onRightPressed: page(1)
-        Keys.onLeftPressed: page(-1)
+        Keys.onRightPressed: page(1, false)
+        Keys.onLeftPressed: page(-1, false)
         ScrollBar.horizontal: ScrollBar {
             policy: ScrollBar.AsNeeded
         }
         delegate: PosterCard {
             theme: shelf.theme
-            width: 180
-            height: 322
+            width: 184
+            height: implicitHeight
             onDetailsRequested: shelf.detailsRequested(entry.id)
             onPlayRequested: shelf.playRequested(entry.id)
         }

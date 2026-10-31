@@ -74,6 +74,39 @@ class Setup : public QObject {
     Q_INVOKABLE QUrl artworkFixtureUrl(int index) {
         return QUrl::fromLocalFile(m_directory.filePath("app/" + artworkFixture(index)));
     }
+    Q_INVOKABLE QUrl backdropFixtureUrl() {
+        // A landscape fixture exercises the full-bleed crop independently of posters.
+        // Entirely synthetic scenery; no provider artwork ships with the application.
+        const auto path = m_directory.filePath("cinema-backdrop.png");
+        QImage image(1600, 900, QImage::Format_RGB32);
+        QPainter painter(&image);
+        painter.setRenderHint(QPainter::Antialiasing);
+        QLinearGradient sky(0, 0, 0, 900);
+        sky.setColorAt(0, QColor("#102338"));
+        sky.setColorAt(0.6, QColor("#497880"));
+        sky.setColorAt(1, QColor("#122B37"));
+        painter.fillRect(image.rect(), sky);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QColor("#D2E3DF"));
+        painter.drawEllipse(QPointF(1160, 200), 62, 62);
+        painter.setBrush(QColor("#92B9BF"));
+        for (int index = 0; index < 45; ++index)
+            painter.drawEllipse(QPointF(40 + index * 139 % 1500, 30 + index * 71 % 260), 1.2, 1.2);
+        const QList<QPolygonF> ridges = {
+            {{0, 540}, {200, 390}, {400, 490}, {740, 260}, {950, 470}, {1200, 330},
+             {1600, 530}, {1600, 900}, {0, 900}},
+            {{0, 670}, {320, 490}, {590, 610}, {920, 420}, {1180, 590}, {1390, 470},
+             {1600, 630}, {1600, 900}, {0, 900}},
+            {{0, 730}, {300, 690}, {570, 760}, {1010, 620}, {1370, 710}, {1600, 650},
+             {1600, 900}, {0, 900}}};
+        const QList<QColor> colors = {QColor("#31515E"), QColor("#203B49"), QColor("#122A38")};
+        for (qsizetype index = 0; index < ridges.size(); ++index) {
+            painter.setBrush(colors[index]);
+            painter.drawPolygon(ridges[index]);
+        }
+        painter.end();
+        return image.save(path) ? QUrl::fromLocalFile(path) : QUrl{};
+    }
     Q_INVOKABLE qint64 detailSeriesFixture() {
         const auto folder = m_directory.filePath("detail-series");
         QDir().mkpath(folder);

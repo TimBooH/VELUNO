@@ -45,9 +45,11 @@ ColumnLayout {
         model: personal.continueWatching
         Keys.onPressed: function (event) {
             if (event.key === Qt.Key_Home) {
+                scrollAnimation.stop();
                 positionViewAtBeginning();
                 event.accepted = true;
             } else if (event.key === Qt.Key_End) {
+                scrollAnimation.stop();
                 positionViewAtEnd();
                 event.accepted = true;
             }

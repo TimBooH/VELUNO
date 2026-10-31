@@ -131,7 +131,7 @@ Item {
             contentWidth: availableWidth
             ColumnLayout {
                 width: parent.width
-                spacing: 22
+                spacing: 30
                 ContinueShelf {
                     theme: page.theme
                     personal: page.personal
@@ -175,13 +175,13 @@ Item {
             Layout.fillHeight: true
             clip: true
             cellWidth: library.tileSize + 18
-            cellHeight: library.tileSize * 1.5 + 70
+            cellHeight: library.tileSize * 1.5 + 56
             model: pageTitle === "Favoriten" ? personal.favorites : page.kind === "movie" ? library.movies : library.series
             ScrollBar.vertical: ScrollBar {}
             delegate: PosterCard {
                 theme: page.theme
                 width: page.library.tileSize
-                height: width * 1.5 + 52
+                height: implicitHeight
                 onDetailsRequested: page.library.openDetails(entry.id)
                 onPlayRequested: page.library.playTitle(entry.id)
             }

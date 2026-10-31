@@ -16,13 +16,13 @@ Dialog {
         return personal.progressForTitle(entry.id || 0);
     }
     readonly property var resumeProgress: progressRows.find(function (p) {
-        return !p.seen && p.position > 0;
-    }) || ({})
+            return !p.seen && p.position > 0;
+        }) || ({})
     readonly property bool canResume: resumeProgress.position > 0 && (!isSeries || !!resumeProgress.preferred_file_id)
     function progressFor(file) {
         return progressRows.find(function (p) {
-            return p.season === file.season && p.episode === file.episode;
-        }) || ({});
+                return p.season === file.season && p.episode === file.episode;
+            }) || ({});
     }
     function quality(file) {
         return (file.height >= 2160 ? "4K UHD" : file.height >= 1080 ? "Full HD" : file.height >= 720 ? "HD" : qsTr("Video")) + " · " + file.width + " × " + file.height;
@@ -36,24 +36,27 @@ Dialog {
                 result.push(file.season);
         }
         return result.sort(function (a, b) {
-            return a - b;
-        });
+                return a - b;
+            });
     }
     readonly property var visibleFiles: isSeries ? files.filter(function (file) {
-        return file.season === (season < 0 ? seasons[0] : season);
-    }) : showFiles ? files : []
+            return file.season === (season < 0 ? seasons[0] : season);
+        }) : showFiles ? files : []
     signal editRequested
     signal collectionsRequested
     signal assignRequested(var entry)
     parent: Overlay.overlay
     anchors.centerIn: parent
-    width: Math.min(parent.width - 48, 960)
-    height: Math.min(parent.height - 48, 850)
+    width: Math.min(parent.width - 48, 1000)
+    height: Math.min(parent.height - 48, 900)
     padding: 0
     title: entry.title || qsTr("Details")
     header: null
     footer: null
     modal: true
+    Overlay.modal: Rectangle {
+        color: "#B300040A"
+    }
     focus: true
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
     onAboutToShow: {
@@ -67,7 +70,7 @@ Dialog {
     }
     background: Rectangle {
         color: detail.theme.surface
-        radius: 10
+        radius: 8
     }
     contentItem: Item {
         ListView {
@@ -78,15 +81,41 @@ Dialog {
             model: detail.visibleFiles
             spacing: 1
             boundsBehavior: Flickable.StopAtBounds
-            ScrollBar.vertical: ScrollBar {}
+            ScrollBar.vertical: ScrollBar {
+            }
             header: Column {
                 id: information
                 width: contents.width
                 Rectangle {
                     id: hero
+                    clip: true
                     width: parent.width
-                    height: Math.max(310, Math.min(440, width * 0.5))
-                    color: detail.theme.raised
+                    height: artwork.status === Image.Ready ? Math.max(300, Math.min(510, width * 0.54, detail.height * 0.68)) : Math.max(280, Math.min(340, detail.height * 0.6))
+                    color: "#142337"
+                    Rectangle {
+                        anchors.fill: parent
+                        visible: artwork.status !== Image.Ready
+                        gradient: Gradient {
+                            orientation: Gradient.Horizontal
+                            GradientStop {
+                                position: 0
+                                color: "#112536"
+                            }
+                            GradientStop {
+                                position: 1
+                                color: "#223A50"
+                            }
+                        }
+                        Rectangle {
+                            width: parent.width * 0.35
+                            height: parent.height * 2
+                            x: parent.width * 0.7
+                            y: -parent.height * 0.4
+                            rotation: 28
+                            color: "#64DDF0"
+                            opacity: 0.035
+                        }
+                    }
                     Image {
                         id: artwork
                         objectName: "titleBackdrop"
@@ -109,7 +138,7 @@ Dialog {
                             }
                             GradientStop {
                                 position: 1
-                                color: detail.theme.light ? "#E6060B14" : detail.theme.surface
+                                color: detail.theme.light ? "#DC080F1C" : detail.theme.surface
                             }
                         }
                     }
@@ -118,7 +147,7 @@ Dialog {
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.bottom: parent.bottom
-                        height: heroTitle.implicitHeight + 130
+                        height: heroTitle.implicitHeight + 160
                         gradient: Gradient {
                             GradientStop {
                                 position: 0
@@ -130,7 +159,7 @@ Dialog {
                             }
                             GradientStop {
                                 position: 1
-                                color: detail.theme.light ? "#DD060B14" : detail.theme.surface
+                                color: detail.theme.light ? "#F5080F1C" : detail.theme.surface
                             }
                         }
                     }
@@ -154,51 +183,93 @@ Dialog {
                             textFormat: Text.PlainText
                             Layout.fillWidth: true
                             Layout.rightMargin: 24
-                            font.pixelSize: detail.width < 700 ? 30 : 42
+                            font.pixelSize: detail.width < 700 ? 34 : 52
                             font.weight: Font.Bold
                             color: "#FFFFFF"
                             wrapMode: Text.Wrap
                             maximumLineCount: 2
                             elide: Text.ElideRight
                         }
-                        Button {
-                            id: primaryPlay
-                            Connections {
-                                target: detail
-                                function onOpened() {
-                                    primaryPlay.forceActiveFocus();
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: 10
+                            Button {
+                                id: primaryPlay
+                                Connections {
+                                    target: detail
+                                    function onOpened() {
+                                        primaryPlay.forceActiveFocus();
+                                    }
+                                }
+                                objectName: "titlePrimaryPlay"
+                                text: detail.library.networkBusy ? qsTr("Verbinden …") : detail.canResume ? qsTr("Fortsetzen") : detail.isSeries ? qsTr("Episoden auswählen") : qsTr("Abspielen")
+                                enabled: !detail.library.networkBusy && (detail.isSeries ? detail.files.length > 0 : !!detail.entry.available)
+                                opacity: enabled ? 1 : 0.5
+                                leftPadding: 22
+                                rightPadding: 22
+                                topPadding: 12
+                                bottomPadding: 12
+                                font.pixelSize: 16
+                                font.weight: Font.DemiBold
+                                contentItem: Text {
+                                    objectName: "titlePrimaryPlayLabel"
+                                    text: "\u25B6\uFE0E  " + primaryPlay.text
+                                    font: primaryPlay.font
+                                    color: "#101722"
+                                    horizontalAlignment: Text.AlignHCenter
+                                }
+                                background: Rectangle {
+                                    radius: 4
+                                    border.width: primaryPlay.visualFocus ? 2 : 0
+                                    border.color: detail.theme.accent
+                                    color: primaryPlay.down ? "#BFC7D0" : primaryPlay.hovered ? "#DEE3E9" : "#FFFFFF"
+                                }
+                                onClicked: {
+                                    if (detail.canResume)
+                                        detail.personal.resumeTitle(detail.entry.id);
+                                    else if (detail.isSeries)
+                                        contents.positionViewAtIndex(0, ListView.Beginning);
+                                    else
+                                        detail.library.playTitle(detail.entry.id);
                                 }
                             }
-                            objectName: "titlePrimaryPlay"
-                            text: detail.library.networkBusy ? qsTr("Verbinden …") : detail.canResume ? qsTr("Fortsetzen") : detail.isSeries ? qsTr("Episoden auswählen") : qsTr("Abspielen")
-                            enabled: !detail.library.networkBusy && (detail.isSeries ? detail.files.length > 0 : !!detail.entry.available)
-                            opacity: enabled ? 1 : 0.5
-                            leftPadding: 22
-                            rightPadding: 22
-                            topPadding: 12
-                            bottomPadding: 12
-                            font.pixelSize: 16
-                            font.weight: Font.DemiBold
-                            contentItem: Text {
-                                objectName: "titlePrimaryPlayLabel"
-                                text: "\u25B6\uFE0E  " + primaryPlay.text
-                                font: primaryPlay.font
-                                color: detail.theme.accentText
-                                horizontalAlignment: Text.AlignHCenter
+                            DetailAction {
+                                objectName: "titleFavorite"
+                                selected: {
+                                    detail.personal.revision;
+                                    return detail.personal.isFavorite(detail.entry.id || 0);
+                                }
+                                symbol: {
+                                    detail.personal.revision;
+                                    return detail.personal.isFavorite(detail.entry.id || 0) ? "♥" : "♡";
+                                }
+                                theme: detail.theme
+                                text: {
+                                    detail.personal.revision;
+                                    return detail.personal.isFavorite(detail.entry.id || 0) ? qsTr("Favorit entfernen") : qsTr("Als Favorit");
+                                }
+                                onClicked: detail.personal.toggleFavorite(detail.entry.id)
                             }
-                            background: Rectangle {
-                                radius: 4
-                                border.width: primaryPlay.visualFocus ? 2 : 0
-                                border.color: detail.theme.accentText
-                                color: primaryPlay.hovered ? detail.theme.muted : detail.theme.accent
+                            DetailAction {
+                                objectName: "titleSeen"
+                                selected: {
+                                    detail.personal.revision;
+                                    return detail.personal.isSeen(detail.entry.id || 0);
+                                }
+                                symbol: "✓"
+                                theme: detail.theme
+                                text: {
+                                    detail.personal.revision;
+                                    return detail.personal.isSeen(detail.entry.id || 0) ? qsTr("Als ungesehen") : qsTr("Als gesehen");
+                                }
+                                onClicked: detail.personal.markSeen(detail.entry.id, !detail.personal.isSeen(detail.entry.id))
                             }
-                            onClicked: {
-                                if (detail.canResume)
-                                    detail.personal.resumeTitle(detail.entry.id);
-                                else if (detail.isSeries)
-                                    contents.positionViewAtIndex(0, ListView.Beginning);
-                                else
-                                    detail.library.playTitle(detail.entry.id);
+                            DetailAction {
+                                objectName: "titleCollectionsButton"
+                                symbol: "+"
+                                theme: detail.theme
+                                text: qsTr("Sammlungen")
+                                onClicked: detail.collectionsRequested()
                             }
                         }
                     }
@@ -217,8 +288,8 @@ Dialog {
                         spacing: 14
                         Label {
                             text: [detail.entry.year > 0 ? detail.entry.year : "", detail.isSeries ? qsTr("Serie") : qsTr("Film"), !detail.isSeries && detail.files.length > 0 && detail.files[0].duration > 0 ? Math.ceil(detail.files[0].duration / 60) + " Min." : ""].filter(function (value) {
-                                return value !== "";
-                            }).join("  ·  ")
+                                    return value !== "";
+                                }).join("  ·  ")
                             color: detail.theme.muted
                         }
                         Label {
@@ -226,6 +297,18 @@ Dialog {
                             text: qsTr("Bewertung") + "  " + Number(detail.entry.rating || 0).toFixed(1) + " / 10"
                             color: detail.theme.accent
                             font.weight: Font.DemiBold
+                        }
+                        Label {
+                            visible: !detail.isSeries && detail.files.length > 0
+                            text: detail.files.length ? (detail.files[0].height >= 2160 ? "4K UHD" : detail.files[0].height >= 1080 ? "Full HD" : detail.files[0].height >= 720 ? "HD" : qsTr("Video")) : ""
+                            color: detail.theme.text
+                            font.pixelSize: 11
+                            padding: 4
+                            background: Rectangle {
+                                color: "transparent"
+                                radius: 2
+                                border.color: detail.theme.border
+                            }
                         }
                         Item {
                             Layout.fillWidth: true
@@ -257,36 +340,6 @@ Dialog {
                                     color: detail.theme.accent
                                 }
                             }
-                        }
-                    }
-                    Flow {
-                        Layout.fillWidth: true
-                        Layout.leftMargin: 22
-                        Layout.rightMargin: 22
-                        spacing: 4
-                        NavButton {
-                            objectName: "titleFavorite"
-                            theme: detail.theme
-                            text: {
-                                detail.personal.revision;
-                                return detail.personal.isFavorite(detail.entry.id || 0) ? qsTr("Favorit entfernen") : qsTr("Als Favorit");
-                            }
-                            onClicked: detail.personal.toggleFavorite(detail.entry.id)
-                        }
-                        NavButton {
-                            objectName: "titleSeen"
-                            theme: detail.theme
-                            text: {
-                                detail.personal.revision;
-                                return detail.personal.isSeen(detail.entry.id || 0) ? qsTr("Als ungesehen") : qsTr("Als gesehen");
-                            }
-                            onClicked: detail.personal.markSeen(detail.entry.id, !detail.personal.isSeen(detail.entry.id))
-                        }
-                        NavButton {
-                            objectName: "titleCollectionsButton"
-                            theme: detail.theme
-                            text: qsTr("Sammlungen")
-                            onClicked: detail.collectionsRequested()
                         }
                     }
                     Label {
@@ -345,8 +398,8 @@ Dialog {
                             objectName: "titleSeasonSelector"
                             visible: detail.isSeries
                             model: detail.seasons.map(function (value) {
-                                return qsTr("Staffel") + " " + value;
-                            })
+                                    return qsTr("Staffel") + " " + value;
+                                })
                             currentIndex: Math.max(0, detail.seasons.indexOf(detail.season))
                             onActivated: detail.season = detail.seasons[currentIndex]
                             Accessible.name: qsTr("Staffel auswählen")

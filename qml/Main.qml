@@ -142,7 +142,7 @@ ApplicationWindow {
     palette.placeholderText: colors.muted
     header: Rectangle {
         color: colors.background
-        height: visible ? 76 : 0
+        height: visible ? 80 : 0
         visible: window.visibility !== Window.FullScreen
         Rectangle {
             anchors.bottom: parent.bottom
@@ -157,7 +157,7 @@ ApplicationWindow {
             spacing: 6
             Label {
                 text: qsTr("VELUNO")
-                font.pixelSize: 22
+                font.pixelSize: 24
                 font.weight: Font.Bold
                 font.letterSpacing: 2
                 color: colors.accent
