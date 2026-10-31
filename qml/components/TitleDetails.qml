@@ -11,6 +11,22 @@ Dialog {
     readonly property var entry: library.selectedTitle
     readonly property bool isSeries: entry.kind === "series"
     readonly property var files: library.detailFiles
+    readonly property var progressRows: {
+        personal.revision;
+        return personal.progressForTitle(entry.id || 0);
+    }
+    readonly property var resumeProgress: progressRows.find(function (p) {
+        return !p.seen && p.position > 0;
+    }) || ({})
+    readonly property bool canResume: resumeProgress.position > 0 && (!isSeries || !!resumeProgress.preferred_file_id)
+    function progressFor(file) {
+        return progressRows.find(function (p) {
+            return p.season === file.season && p.episode === file.episode;
+        }) || ({});
+    }
+    function quality(file) {
+        return (file.height >= 2160 ? "4K UHD" : file.height >= 1080 ? "Full HD" : file.height >= 720 ? "HD" : qsTr("Video")) + " · " + file.width + " × " + file.height;
+    }
     property bool showFiles: false
     property int season: -1
     readonly property var seasons: {
@@ -147,8 +163,14 @@ Dialog {
                         }
                         Button {
                             id: primaryPlay
+                            Connections {
+                                target: detail
+                                function onOpened() {
+                                    primaryPlay.forceActiveFocus();
+                                }
+                            }
                             objectName: "titlePrimaryPlay"
-                            text: detail.library.networkBusy ? qsTr("Verbinden …") : detail.isSeries ? qsTr("Episoden auswählen") : qsTr("Abspielen")
+                            text: detail.library.networkBusy ? qsTr("Verbinden …") : detail.canResume ? qsTr("Fortsetzen") : detail.isSeries ? qsTr("Episoden auswählen") : qsTr("Abspielen")
                             enabled: !detail.library.networkBusy && (detail.isSeries ? detail.files.length > 0 : !!detail.entry.available)
                             opacity: enabled ? 1 : 0.5
                             leftPadding: 22
@@ -166,10 +188,14 @@ Dialog {
                             }
                             background: Rectangle {
                                 radius: 4
+                                border.width: primaryPlay.visualFocus ? 2 : 0
+                                border.color: detail.theme.accentText
                                 color: primaryPlay.hovered ? detail.theme.muted : detail.theme.accent
                             }
                             onClicked: {
-                                if (detail.isSeries)
+                                if (detail.canResume)
+                                    detail.personal.resumeTitle(detail.entry.id);
+                                else if (detail.isSeries)
                                     contents.positionViewAtIndex(0, ListView.Beginning);
                                 else
                                     detail.library.playTitle(detail.entry.id);
@@ -203,6 +229,34 @@ Dialog {
                         }
                         Item {
                             Layout.fillWidth: true
+                        }
+                    }
+                    ColumnLayout {
+                        visible: detail.resumeProgress.position > 0
+                        Layout.fillWidth: true
+                        Layout.leftMargin: 32
+                        Layout.rightMargin: 32
+                        Label {
+                            objectName: "titleResumePosition"
+                            text: (detail.isSeries ? "S" + detail.resumeProgress.season + " E" + detail.resumeProgress.episode + " · " : "") + qsTr("Fortsetzen bei") + " " + Math.floor((detail.resumeProgress.position || 0) / 60) + ":" + ("0" + Math.floor((detail.resumeProgress.position || 0) % 60)).slice(-2)
+                            color: detail.theme.accent
+                        }
+                        ProgressBar {
+                            id: titleProgress
+                            Layout.fillWidth: true
+                            from: 0
+                            to: Math.max(1, detail.resumeProgress.duration || 0)
+                            value: detail.resumeProgress.position || 0
+                            background: null
+                            contentItem: Rectangle {
+                                implicitHeight: 4
+                                color: detail.theme.raised
+                                Rectangle {
+                                    width: parent.width * titleProgress.position
+                                    height: parent.height
+                                    color: detail.theme.accent
+                                }
+                            }
                         }
                     }
                     Flow {
@@ -271,7 +325,7 @@ Dialog {
                         NavButton {
                             objectName: "titleFilesToggle"
                             theme: detail.theme
-                            text: (detail.showFiles ? "−  " : "+  ") + qsTr("Dateien und Versionen")
+                            text: (detail.showFiles ? "−  " : "+  ") + qsTr("Dateien und Versionen") + (!detail.isSeries ? " (" + detail.files.length + ")" : "")
                             onClicked: detail.showFiles = !detail.showFiles
                         }
                     }
@@ -354,9 +408,32 @@ Dialog {
                         spacing: 6
                         Label {
                             Layout.fillWidth: true
-                            text: (detail.isSeries ? qsTr("Episode") + " " + fileRow.modelData.episode + "  ·  " : "") + fileRow.modelData.width + " × " + fileRow.modelData.height + (fileRow.modelData.available ? "" : "  ·  " + qsTr("Nicht verfügbar"))
+                            text: (detail.isSeries ? qsTr("Episode") + " " + fileRow.modelData.episode + "  ·  " : "") + detail.quality(fileRow.modelData) + (fileRow.modelData.available ? "" : "  ·  " + qsTr("Nicht verfügbar"))
                             color: detail.theme.text
                             wrapMode: Text.WordWrap
+                        }
+                        Label {
+                            visible: !!detail.progressFor(fileRow.modelData).seen
+                            text: qsTr("Gesehen")
+                            color: detail.theme.accent
+                        }
+                        ProgressBar {
+                            id: episodeProgress
+                            background: null
+                            contentItem: Rectangle {
+                                implicitHeight: 4
+                                color: detail.theme.raised
+                                Rectangle {
+                                    width: parent.width * episodeProgress.position
+                                    height: parent.height
+                                    color: detail.theme.accent
+                                }
+                            }
+                            visible: !detail.progressFor(fileRow.modelData).seen && detail.progressFor(fileRow.modelData).position > 0
+                            Layout.fillWidth: true
+                            from: 0
+                            to: Math.max(1, detail.progressFor(fileRow.modelData).duration || 0)
+                            value: detail.progressFor(fileRow.modelData).position || 0
                         }
                         Label {
                             visible: detail.showFiles

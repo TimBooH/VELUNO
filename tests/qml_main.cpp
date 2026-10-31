@@ -102,6 +102,22 @@ class Setup : public QObject {
         m_library->reload();
         return title;
     }
+    Q_INVOKABLE void seedDetailProgress(qint64 title, int season, int episode, double position) {
+        const auto files = m_database->query("SELECT id FROM media_files WHERE title_id=? AND "
+                                             "season=? AND episode=? ORDER BY height DESC LIMIT 1",
+                                             {title, season, episode});
+        if (files.isEmpty())
+            qFatal("Missing detail fixture file");
+        m_database->query("INSERT INTO "
+                          "playback_progress(profile_id,title_id,season,episode,file_id,position,"
+                          "duration,seen,updated_at) VALUES(?,?,?,?,?,?,14,0,datetime('now')) ON "
+                          "CONFLICT(profile_id,title_id,season,episode) DO UPDATE SET "
+                          "file_id=excluded.file_id,position=excluded.position,duration=14,seen=0,"
+                          "updated_at=excluded.updated_at",
+                          {m_database->setting("active_profile", "1").toLongLong(), title, season,
+                           episode, files.first().toMap().value("id"), position});
+        m_personal->refresh();
+    }
     Q_INVOKABLE void resetSetupForTests() {
         m_localization->setLanguage("de");
         m_database->setSetting("setup_complete", "1");

@@ -74,6 +74,8 @@ class PersonalController final : public QObject {
     Q_INVOKABLE void markSeen(qint64 title, bool seen);
     Q_INVOKABLE bool isSeen(qint64 title) const;
     Q_INVOKABLE void resume(qint64 fileId);
+    Q_INVOKABLE QVariantList progressForTitle(qint64 title) const;
+    Q_INVOKABLE void resumeTitle(qint64 title);
     Q_INVOKABLE void saveProgress();
     Q_INVOKABLE void stopTracking();
     Q_INVOKABLE void markCredits();

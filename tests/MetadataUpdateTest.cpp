@@ -1,6 +1,8 @@
 #include "metadata/MetadataController.h"
 #include "updater/UpdateService.h"
+#include <QBuffer>
 #include <QCryptographicHash>
+#include <QImage>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -18,6 +20,8 @@ class ApiServer : public QObject {
     QTcpServer server;
     QList<QByteArray> requests;
     bool holdReplies = false;
+    bool artwork = false;
+    int httpStatus = 200;
     QList<QPointer<QTcpSocket>> heldReplies;
     ApiServer() {
         connect(&server, &QTcpServer::newConnection, this, [this] {
@@ -36,7 +40,10 @@ class ApiServer : public QObject {
                         return;
                     }
                     QJsonObject data;
-                    if (line.contains("/search/"))
+                    if (line.contains("/configuration"))
+                        data = {{"images",
+                                 QJsonObject{{"secure_base_url", "https://image.tmdb.org/t/p/"}}}};
+                    else if (line.contains("/search/"))
                         data = {
                             {"results",
                              QJsonArray{QJsonObject{
@@ -47,8 +54,20 @@ class ApiServer : public QObject {
                                 {"overview", "Provider description"},
                                 {"genres", QJsonArray{QJsonObject{{"name", "Drama"}}}},
                                 {"images", QJsonObject{}}};
-                    const auto body = QJsonDocument(data).toJson(QJsonDocument::Compact);
-                    socket->write("HTTP/1.1 200 OK\r\nContent-Type: "
+                    if (artwork && !line.contains("/configuration") && !line.contains("/search/")) {
+                        data["poster_path"] = "/test.png";
+                        data["backdrop_path"] = "/test.png";
+                    }
+                    auto body = QJsonDocument(data).toJson(QJsonDocument::Compact);
+                    if (line.contains("/w500/") || line.contains("/w1280/")) {
+                        QImage image(24, 16, QImage::Format_RGB32);
+                        image.fill(Qt::blue);
+                        QBuffer buffer(&body);
+                        buffer.open(QIODevice::WriteOnly | QIODevice::Truncate);
+                        image.save(&buffer, "PNG");
+                    }
+                    socket->write("HTTP/1.1 " + QByteArray::number(httpStatus) +
+                                  " Result\r\nContent-Type: "
                                   "application/json\r\nConnection: close\r\nContent-Length: " +
                                   QByteArray::number(body.size()) + "\r\n\r\n" + body);
                     socket->disconnectFromHost();
@@ -81,6 +100,8 @@ class MetadataUpdateTest : public QObject {
         QVERIFY(api.server.listen(QHostAddress::LocalHost));
         const QUrl base(QString("http://127.0.0.1:%1").arg(api.server.serverPort()));
         MetadataController metadata(db, library, personal, nullptr, base);
+        metadata.edit(title, "Movie", "Locally edited without TMDB");
+        QCOMPARE(metadata.statistics().value("matched").toInt(), 0);
         metadata.setToken("test-token");
         metadata.search(title, "Movie");
         QTest::qWait(650);
@@ -199,6 +220,78 @@ class MetadataUpdateTest : public QObject {
         db.query("PRAGMA query_only=ON");
         restored.setEnabled(true);
         QVERIFY(!restored.enabled()); // A failed save cannot silently enable requests.
+    }
+    void metadataAccessAndOfflineArtworkRoundTrip() {
+        QTemporaryDir dir;
+        Database db(dir.filePath("app/veluno.sqlite3"));
+        LibraryRepository repo(db);
+        QDir().mkpath(dir.filePath("media"));
+        ScannedFile f;
+        f.sourceId = repo.addSource(dir.filePath("media"), "movie");
+        f.path = dir.filePath("media/Movie.mp4");
+        f.title = "Movie";
+        f.kind = "movie";
+        repo.record(f, "fixture");
+        const auto title = repo.file(f.path).value("title_id").toLongLong();
+        LibraryController library(db, false, false);
+        MpvEngine player(nullptr, true);
+        PersonalController personal(db, library, player);
+        ApiServer api;
+        api.artwork = true;
+        QVERIFY(api.server.listen(QHostAddress::LocalHost));
+        const QUrl base(QString("http://127.0.0.1:%1/").arg(api.server.serverPort()));
+        MetadataController metadata(db, library, personal, nullptr,
+                                    QUrl(base.toString().chopped(1)), base);
+        metadata.testAccess();
+        QTest::qWait(600);
+        QCOMPARE(api.requests.size(), 0);
+        metadata.setToken("test-token");
+        metadata.setEnabled(true);
+        metadata.testAccess();
+        QTRY_VERIFY_WITH_TIMEOUT(metadata.status().contains("erfolgreich geprüft"), 5000);
+        QTRY_COMPARE_WITH_TIMEOUT(metadata.statistics().value("posters").toInt(), 1, 10000);
+        QTRY_VERIFY_WITH_TIMEOUT(!metadata.busy(), 10000);
+        QCOMPARE(metadata.statistics().value("matched").toInt(), 1);
+        QCOMPARE(metadata.pendingCount(), 0);
+        const auto details =
+            db.query("SELECT poster,backdrop FROM media_details WHERE title_id=?", {title})
+                .first()
+                .toMap();
+        QVERIFY(QFileInfo::exists(dir.filePath("app/" + details.value("poster").toString())));
+        QVERIFY(!details.value("backdrop").toString().isEmpty());
+        metadata.setEnabled(false);
+        const auto count = api.requests.size();
+        metadata.retryMissingArtwork();
+        QTest::qWait(650);
+        QCOMPARE(api.requests.size(), count);
+        QCOMPARE(db.query("SELECT poster FROM media_details WHERE title_id=?", {title})
+                     .first()
+                     .toMap()
+                     .value("poster"),
+                 details.value("poster"));
+    }
+    void invalidMetadataAccessCanBeCorrected() {
+        QTemporaryDir dir;
+        Database db(dir.filePath("db.sqlite3"));
+        LibraryController library(db, false, false);
+        MpvEngine player(nullptr, true);
+        PersonalController personal(db, library, player);
+        ApiServer api;
+        api.httpStatus = 401;
+        QVERIFY(api.server.listen(QHostAddress::LocalHost));
+        MetadataController metadata(
+            db, library, personal, nullptr,
+            QUrl(QString("http://127.0.0.1:%1").arg(api.server.serverPort())));
+        metadata.setToken("invalid-test-token");
+        metadata.setEnabled(true);
+        metadata.testAccess();
+        QTRY_VERIFY_WITH_TIMEOUT(metadata.status().contains("abgewiesen"), 5000);
+        QTRY_VERIFY(!metadata.busy());
+        api.httpStatus = 200;
+        metadata.setToken("corrected-test-token");
+        metadata.testAccess();
+        QTRY_VERIFY_WITH_TIMEOUT(metadata.status().contains("erfolgreich geprüft"), 5000);
+        QVERIFY(api.requests.last().contains("corrected-test-token"));
     }
     void signedUpdatesRejectTamperingAndIncompatibleData() {
         auto *context = EVP_PKEY_CTX_new_id(EVP_PKEY_ED25519, nullptr);

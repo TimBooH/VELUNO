@@ -43,6 +43,15 @@ ColumnLayout {
         spacing: 14
         clip: true
         model: personal.continueWatching
+        Keys.onPressed: function (event) {
+            if (event.key === Qt.Key_Home) {
+                positionViewAtBeginning();
+                event.accepted = true;
+            } else if (event.key === Qt.Key_End) {
+                positionViewAtEnd();
+                event.accepted = true;
+            }
+        }
         boundsBehavior: Flickable.StopAtBounds
         onMovementStarted: scrollAnimation.stop()
         function page(direction) {

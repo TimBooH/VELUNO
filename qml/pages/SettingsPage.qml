@@ -130,7 +130,9 @@ Item {
                             Layout.fillWidth: true
                             Accessible.name: qsTr("TMDB API-Zugang")
                         }
-                        RowLayout {
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: 6
                             Button {
                                 objectName: "tmdbSaveToken"
                                 text: qsTr("Zugang speichern")
@@ -140,11 +142,44 @@ Item {
                                 }
                             }
                             Button {
+                                objectName: "tmdbTestAccess"
+                                opacity: enabled ? 1 : 0.4
+                                text: qsTr("Zugang prüfen")
+                                enabled: metadata.enabled && metadata.configured && !metadata.busy
+                                onClicked: metadata.testAccess()
+                            }
+                            Button {
                                 objectName: "tmdbRefresh"
+                                opacity: enabled ? 1 : 0.4
                                 text: qsTr("Metadaten aktualisieren")
                                 enabled: metadata.enabled && metadata.configured && !metadata.busy
                                 onClicked: metadata.refreshAll()
                             }
+                        }
+                        BusyIndicator {
+                            running: metadata.busy
+                            visible: running
+                            Layout.preferredHeight: 32
+                            Layout.preferredWidth: 32
+                            Accessible.name: qsTr("Metadaten werden geladen")
+                        }
+                        Label {
+                            Layout.fillWidth: true
+                            text: qsTr("Bibliothek") + ": " + metadata.statistics.total + " · " + qsTr("TMDB zugeordnet") + ": " + metadata.statistics.matched + " · " + qsTr("Mit Poster") + ": " + metadata.statistics.posters + (metadata.busy ? " · " + qsTr("Ausstehend") + ": " + metadata.pendingCount : "")
+                            color: settingsPage.theme.muted
+                            wrapMode: Text.WordWrap
+                        }
+                        Button {
+                            text: qsTr("Fehlende Bilder erneut laden")
+                            opacity: enabled ? 1 : 0.4
+                            enabled: metadata.enabled && metadata.configured && !metadata.busy
+                            onClicked: metadata.retryMissingArtwork()
+                        }
+                        Label {
+                            Layout.fillWidth: true
+                            text: qsTr("Nicht zugeordnete Titel kannst du in den Titeldetails unter Informationen und Bilder bearbeiten gezielt bei TMDB suchen und auswählen.")
+                            color: settingsPage.theme.muted
+                            wrapMode: Text.WordWrap
                         }
                         Label {
                             text: metadata.status

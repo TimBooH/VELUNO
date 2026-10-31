@@ -380,6 +380,29 @@ void PersonalController::stopTracking() {
     m_started = false;
     cancelNext();
 }
+QVariantList PersonalController::progressForTitle(qint64 title) const {
+    return m_db.query("SELECT p.*,(SELECT f.id FROM media_files f WHERE f.title_id=p.title_id "
+                      "AND f.season=p.season AND f.episode=p.episode AND f.available=1 "
+                      "ORDER BY f.height DESC,f.width DESC,f.id LIMIT 1) AS preferred_file_id "
+                      "FROM playback_progress p WHERE p.profile_id=? AND p.title_id=? "
+                      "ORDER BY p.updated_at DESC,p.rowid DESC",
+                      {profileId(), title});
+}
+void PersonalController::resumeTitle(qint64 title) {
+    m_library.openDetails(title);
+    if (m_library.selectedTitle().value("kind") == "movie") {
+        m_library.playTitle(title);
+        return;
+    }
+    for (const auto &value : progressForTitle(title)) {
+        const auto progress = value.toMap();
+        if (!progress.value("seen").toBool() && progress.value("position").toDouble() > 0 &&
+            !progress.value("preferred_file_id").isNull()) {
+            resume(progress.value("preferred_file_id").toLongLong());
+            return;
+        }
+    }
+}
 void PersonalController::resume(qint64 fileId) {
     const auto files = m_db.query("SELECT path,title_id FROM media_files WHERE id=?", {fileId});
     if (!files.isEmpty()) {

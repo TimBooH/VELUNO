@@ -51,7 +51,7 @@ Item {
         id: hideControls
         interval: 2000
         onTriggered: {
-            if (!player.paused && !panelHover.hovered && !headerHover.hovered)
+            if (!player.paused && !panelHover.hovered && !headerHover.hovered && !diagnostics.opened)
                 page.controlsVisible = false;
             else
                 restart();
@@ -63,47 +63,131 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        height: 64
+        height: headerContent.implicitHeight + 24
         color: "#E6111E34"
         visible: page.overlayVisible
         HoverHandler {
             id: headerHover
         }
-        RowLayout {
+        ColumnLayout {
+            id: headerContent
             anchors.fill: parent
             anchors.margins: 12
-            Button {
-                text: qsTr("Zurück")
-                onClicked: page.closeRequested()
-                Accessible.name: qsTr("Player schließen")
-            }
-            Label {
-                text: player.title
-                color: "#EFF5FF"
-                elide: Text.ElideMiddle
+            RowLayout {
                 Layout.fillWidth: true
-                font.pixelSize: 16
+                Button {
+                    text: qsTr("Zurück")
+                    onClicked: page.closeRequested()
+                    Accessible.name: qsTr("Player schließen")
+                }
+                Label {
+                    text: player.title
+                    textFormat: Text.PlainText
+                    color: "#EFF5FF"
+                    elide: Text.ElideMiddle
+                    Layout.fillWidth: true
+                    font.pixelSize: 16
+                }
+                Button {
+                    text: qsTr("Datei öffnen")
+                    onClicked: page.openRequested()
+                }
             }
-            Button {
-                text: qsTr("Abspann markieren")
-                visible: personal.hasNext
-                onClicked: personal.markCredits()
-            }
-            Button {
-                text: qsTr("Nächste Folge")
-                visible: personal.hasNext
-                onClicked: personal.playNext()
-            }
-            Button {
-                text: qsTr("Spuren")
-                onClicked: tracks.open()
-            }
-            Button {
-                text: qsTr("Datei öffnen")
-                onClicked: page.openRequested()
+            Flow {
+                Layout.fillWidth: true
+                spacing: 6
+                Button {
+                    text: qsTr("Spuren")
+                    onClicked: tracks.open()
+                }
+                Button {
+                    objectName: "playbackDiagnosticsButton"
+                    text: qsTr("Wiedergabedetails")
+                    onClicked: diagnostics.open()
+                }
+                Button {
+                    text: qsTr("Abspann markieren")
+                    visible: personal.hasNext
+                    onClicked: personal.markCredits()
+                }
+                Button {
+                    text: qsTr("Nächste Folge")
+                    visible: personal.hasNext
+                    onClicked: personal.playNext()
+                }
             }
         }
     }
+    Dialog {
+        id: diagnostics
+        objectName: "playbackDiagnostics"
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: Math.min(parent.width - 48, 620)
+        height: Math.min(parent.height - 48, 440)
+        modal: true
+        title: qsTr("Wiedergabedetails")
+        footer: DialogButtonBox {
+            Button {
+                objectName: "playbackDiagnosticsClose"
+                text: qsTr("Schließen")
+                onClicked: diagnostics.close()
+            }
+        }
+        ScrollView {
+            anchors.fill: parent
+            contentWidth: availableWidth
+            ColumnLayout {
+                width: parent.width
+                spacing: 12
+                Label {
+                    Layout.fillWidth: true
+                    text: qsTr("Diese Angaben meldet der laufende Player. Nicht gemeldete Werte bestätigen keine Hardwarebeschleunigung.")
+                    color: page.theme.muted
+                    wrapMode: Text.WordWrap
+                }
+                Repeater {
+                    model: [
+                        {
+                            key: "rendering",
+                            label: qsTr("Bildausgabe")
+                        },
+                        {
+                            key: "hwdec-current",
+                            label: qsTr("Hardwaredecoder")
+                        },
+                        {
+                            key: "video-codec",
+                            label: qsTr("Videocodec")
+                        },
+                        {
+                            key: "video-format",
+                            label: qsTr("Videoformat")
+                        },
+                        {
+                            key: "audio-codec-name",
+                            label: qsTr("Audiocodec")
+                        },
+                        {
+                            key: "audio-device",
+                            label: qsTr("Audioausgabe")
+                        }
+                    ]
+                    Label {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        text: modelData.label + ": " + (modelData.key === "hwdec-current" && page.player.diagnostics[modelData.key] === "no" ? qsTr("Software-Decodierung") : page.player.diagnostics[modelData.key] || qsTr("Nicht gemeldet"))
+                        textFormat: Text.PlainText
+                        color: page.theme.text
+                        wrapMode: Text.WordWrap
+                    }
+                }
+            }
+        }
+        onOpened: hideControls.stop()
+        onClosed: page.revealControls()
+    }
+
     Rectangle {
         anchors.right: parent.right
         anchors.bottom: parent.bottom

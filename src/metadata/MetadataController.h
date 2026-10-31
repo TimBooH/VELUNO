@@ -16,10 +16,13 @@ class MetadataController final : public QObject {
     Q_PROPERTY(bool configured READ configured NOTIFY changed)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY changed)
     Q_PROPERTY(QString status READ status NOTIFY changed)
+    Q_PROPERTY(QVariantMap statistics READ statistics NOTIFY changed)
+    Q_PROPERTY(int pendingCount READ pendingCount NOTIFY changed)
   public:
     MetadataController(Database &db, LibraryController &library, PersonalController &personal,
                        QObject *parent = nullptr,
-                       const QUrl &api = QUrl("https://api.themoviedb.org/3"));
+                       const QUrl &api = QUrl("https://api.themoviedb.org/3"),
+                       const QUrl &imageBase = QUrl("https://image.tmdb.org/t/p/"));
     ~MetadataController() override;
     QVariantList results() const {
         return m_results;
@@ -28,7 +31,8 @@ class MetadataController final : public QObject {
         return m_images;
     }
     bool busy() const {
-        return !m_requests.isEmpty() || !m_replies.isEmpty() || m_imageJobs > 0;
+        return !m_requests.isEmpty() || !m_imageRequests.isEmpty() || !m_replies.isEmpty() ||
+               m_imageJobs > 0;
     }
     bool configured() const {
         return !m_db.setting("tmdb_token").isEmpty();
@@ -40,6 +44,12 @@ class MetadataController final : public QObject {
     QString status() const {
         return m_status;
     }
+    QVariantMap statistics() const;
+    int pendingCount() const {
+        return m_requests.size() + m_imageRequests.size() + m_replies.size() + m_imageJobs;
+    }
+    Q_INVOKABLE void testAccess();
+    Q_INVOKABLE void retryMissingArtwork();
     Q_INVOKABLE void setToken(const QString &token);
     Q_INVOKABLE void search(qint64 title, const QString &query);
     Q_INVOKABLE void choose(qint64 providerId);
@@ -58,6 +68,12 @@ class MetadataController final : public QObject {
         QString path;
         std::function<void(QJsonObject)> done;
     };
+    struct ImageRequest {
+        qint64 title;
+        QString kind, remote;
+    };
+    QQueue<ImageRequest> m_imageRequests;
+    void downloadImage(qint64 title, const QString &kind, const QString &remote);
     bool allowed() const;
     void request(const QString &path, std::function<void(QJsonObject)> done);
     void pump();
@@ -71,7 +87,7 @@ class MetadataController final : public QObject {
     LibraryController &m_library;
     PersonalController &m_personal;
     QNetworkAccessManager m_network;
-    QUrl m_api;
+    QUrl m_api, m_imageBase;
     QQueue<Request> m_requests;
     QSet<QNetworkReply *> m_replies;
     QSet<qint64> m_pendingTitles;

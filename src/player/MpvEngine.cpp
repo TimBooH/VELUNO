@@ -93,6 +93,9 @@ MpvEngine::MpvEngine(QObject *parent, bool nullOutput)
         mpv_observe_property(m_session->handle, 0, "audio-device-list", MPV_FORMAT_NODE);
     for (const char *name : {"track-list", "chapter-list"})
         mpv_observe_property(m_session->handle, 0, name, MPV_FORMAT_NODE);
+    for (const char *name :
+         {"hwdec-current", "video-codec", "video-format", "audio-codec-name", "audio-device"})
+        mpv_observe_property(m_session->handle, 0, name, MPV_FORMAT_STRING);
     // No callbacks point into a dying QObject: drain events without blocking.
     m_events.setInterval(30);
     connect(&m_events, &QTimer::timeout, this, &MpvEngine::pollEvents);
@@ -179,6 +182,7 @@ void MpvEngine::loadPending() {
     const auto path = m_pending.toUtf8();
     m_pending.clear();
     command({"set", "sid", "no"});
+    command({"set", "aid", "auto"});
     setFlag("pause", false);
     command({"loadfile", path, "replace"});
 }
@@ -321,9 +325,18 @@ void MpvEngine::pollEvents() {
                                  << QString::fromUtf8(log->text).trimmed();
         } else if (event->event_id == MPV_EVENT_PROPERTY_CHANGE) {
             const auto *property = static_cast<mpv_event_property *>(event->data);
-            if (!property->data)
-                continue;
             const QByteArray name(property->name);
+            if (!property->data) {
+                if (m_diagnostics.remove(QString::fromUtf8(name)))
+                    emit mediaInfoChanged();
+                continue;
+            }
+            if (property->format == MPV_FORMAT_STRING) {
+                m_diagnostics[QString::fromUtf8(name)] =
+                    QString::fromUtf8(*static_cast<char **>(property->data));
+                emit mediaInfoChanged();
+                continue;
+            }
             if (property->format == MPV_FORMAT_NODE) {
                 const auto items = fromNode(*static_cast<mpv_node *>(property->data)).toList();
                 if (name == "audio-device-list")

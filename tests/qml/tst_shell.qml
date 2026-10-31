@@ -267,6 +267,16 @@ TestCase {
         verify(playback.active);
         compare(playback.error, "");
         let page = findChild(shell, "playerPage");
+        mouseClick(findChild(shell, "playbackDiagnosticsButton"));
+        let diagnostics = findChild(shell, "playbackDiagnostics");
+        tryCompare(diagnostics, "opened", true);
+        verify(playback.diagnostics.rendering.length > 0);
+        if (screenshotDirectory.length > 0) {
+            waitForRendering(shell.contentItem);
+            grabImage(shell.contentItem.parent).save(screenshotDirectory + "/playback-diagnostics.png");
+        }
+        mouseClick(findChild(shell, "playbackDiagnosticsClose"));
+        tryCompare(diagnostics, "opened", false);
         tryCompare(page, "overlayVisible", false, 4500);
         mouseMove(page, page.width / 2, page.height / 2);
         tryCompare(page, "overlayVisible", true);
@@ -375,7 +385,9 @@ TestCase {
             return row.contentX < 1;
         });
         wait(260);
-        row.positionViewAtIndex(11, ListView.Contain);
+        row.forceActiveFocus();
+        keyClick(Qt.Key_End);
+        wait(40);
         row.forceLayout();
         tryCompare(next, "enabled", false);
         wait(300);
@@ -387,6 +399,9 @@ TestCase {
         tryCompare(fallback, "artworkStatus", Image.Error);
         mouseClick(fallback, 20, 20);
         compare(fixture.detailsId, 12);
+        row.forceActiveFocus();
+        keyClick(Qt.Key_Home);
+        tryCompare(previous, "enabled", false);
         fixture.rows.clear();
         tryCompare(fixture.shelf, "visible", false);
         wait(30);
@@ -401,6 +416,7 @@ TestCase {
         let id = library.search("Example Movie")[0].id;
         metadata.edit(id, "Example Movie", "Ein Film für den lokalen Oberflächentest. Die Beschreibung bleibt auch ohne Internet verfügbar.", 2020);
         metadata.selectLocalImage(id, "backdrop", testInput.artworkFixtureUrl(3));
+        testInput.seedDetailProgress(id, 0, 0, 6);
         library.openDetails(id);
         let detail = findChild(shell, "titleDetails");
         tryCompare(detail, "opened", true);
@@ -410,6 +426,8 @@ TestCase {
         tryCompare(artwork, "status", Image.Ready);
         let list = findChild(shell, "titleDetailsScroll");
         compare(list.count, 0); // File paths are not the default presentation.
+        compare(findChild(shell, "titlePrimaryPlay").text, "Fortsetzen");
+        verify(findChild(shell, "titleResumePosition").text.indexOf("0:06") >= 0);
         let favorite = findChild(shell, "titleFavorite");
         let wasFavorite = personal.isFavorite(id);
         mouseClick(favorite);
@@ -530,6 +548,23 @@ TestCase {
         mouseClick(findChild(shell, "scanStatusButton"));
         compare(shell.currentPage, "Einstellungen");
         compare(findChild(shell, "settingsPage").section, 1);
+    }
+    function test_resumeSeriesFromTitleDetails() {
+        let id = testInput.detailSeriesFixture();
+        testInput.seedDetailProgress(id, 2, 1, 6);
+        library.openDetails(id);
+        let detail = findChild(shell, "titleDetails");
+        tryCompare(detail, "opened", true);
+        compare(findChild(shell, "titlePrimaryPlay").text, "Fortsetzen");
+        revealDetailControl(findChild(shell, "titlePrimaryPlay"));
+        mouseClick(findChild(shell, "titlePrimaryPlay"));
+        tryCompare(shell, "playerVisible", true);
+        tryCompare(playback, "loading", false, 10000);
+        tryVerify(function () {
+            return playback.position > 5.5;
+        });
+        verify(playback.title.indexOf("S2E1") >= 0);
+        shell.closePlayer();
     }
     function test_regularWindow() {
         compare(shell.title, "VELUNO");

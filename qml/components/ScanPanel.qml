@@ -67,10 +67,17 @@ ColumnLayout {
         color: theme.text
         font.weight: Font.DemiBold
     }
+    Label {
+        visible: library.errorCount > 0
+        text: qsTr("Wiederholen prüft den betroffenen Medienordner erneut. Dateipfade können für die Fehlersuche markiert und kopiert werden.")
+        color: theme.muted
+        wrapMode: Text.WordWrap
+        Layout.fillWidth: true
+    }
     ListView {
         visible: count > 0
         Layout.fillWidth: true
-        Layout.preferredHeight: Math.min(150, contentHeight)
+        Layout.preferredHeight: Math.min(300, contentHeight)
         clip: true
         spacing: 8
         model: library.errors
@@ -88,11 +95,15 @@ ColumnLayout {
                 anchors.margins: 8
                 ColumnLayout {
                     Layout.fillWidth: true
-                    Label {
+                    TextArea {
+                        readOnly: true
+                        selectByMouse: true
+                        padding: 0
+                        background: null
+                        wrapMode: TextEdit.Wrap
                         text: entry.path
                         textFormat: Text.PlainText
                         color: panel.theme.text
-                        elide: Text.ElideMiddle
                         Layout.fillWidth: true
                     }
                     Label {

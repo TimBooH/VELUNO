@@ -192,6 +192,13 @@ Item {
                 color: page.theme.muted
             }
         }
+        Label {
+            visible: page.catalogPage && page.showUnassigned
+            Layout.fillWidth: true
+            text: qsTr("Serien werden beispielsweise über S01E02, 1x02 oder Folge 2 im Ordner Staffel 1 erkannt. Mehrdeutige Dateien kannst du einzeln zuordnen; Originaldateien bleiben unverändert.")
+            wrapMode: Text.WordWrap
+            color: page.theme.muted
+        }
         ListView {
             id: unassignedList
             objectName: "unassignedList"

@@ -20,6 +20,10 @@ class PlayerTest : public QObject {
         QTRY_VERIFY_WITH_TIMEOUT(!player.loading(), 10000);
         QVERIFY2(player.error().isEmpty(), qPrintable(player.error()));
         QTRY_VERIFY(player.duration() > 13);
+        QTRY_VERIFY(!player.diagnostics().value("video-codec").toString().isEmpty());
+        QTRY_VERIFY(!player.diagnostics().value("audio-codec-name").toString().isEmpty());
+        QCOMPARE(player.diagnostics().value("rendering").toString(),
+                 QString("Null-Ausgabe (Test)"));
         QTRY_VERIFY(player.position() > 0.15);
         player.togglePause();
         QTRY_VERIFY(player.paused());
@@ -99,6 +103,60 @@ class PlayerTest : public QObject {
         QVERIFY2(player.error().isEmpty(), qPrintable(player.error()));
         player.stop();
         QCOMPARE(fixtureHash(m_video), before);
+    }
+    void germanAudioPreferenceResetsForNewFile() {
+        const auto path = m_directory.filePath("multiple-languages.mkv");
+        QProcess ffmpeg;
+        ffmpeg.start("ffmpeg", {"-hide_banner",
+                                "-loglevel",
+                                "error",
+                                "-y",
+                                "-i",
+                                m_video,
+                                "-map",
+                                "0:v:0",
+                                "-map",
+                                "0:a:0",
+                                "-map",
+                                "0:a:0",
+                                "-c",
+                                "copy",
+                                "-metadata:s:a:0",
+                                "language=eng",
+                                "-metadata:s:a:1",
+                                "language=deu",
+                                "-disposition:a:0",
+                                "default",
+                                "-disposition:a:1",
+                                "0",
+                                path});
+        QVERIFY(ffmpeg.waitForFinished(30000));
+        QCOMPARE(ffmpeg.exitCode(), 0);
+        const auto hash = fixtureHash(path);
+        veluno::MpvEngine player(nullptr, true);
+        const auto selectedLanguage = [&player] {
+            for (const auto &track : player.audioTracks())
+                if (track.toMap().value("selected").toBool())
+                    return track.toMap().value("lang").toString();
+            return QString{};
+        };
+        player.openFile(QUrl::fromLocalFile(path));
+        QTRY_VERIFY_WITH_TIMEOUT(!player.loading(), 10000);
+        QTRY_COMPARE(player.audioTracks().size(), 2);
+        QTRY_COMPARE(selectedLanguage(), QString("deu"));
+        int english = -1;
+        for (const auto &track : player.audioTracks())
+            if (track.toMap().value("lang") == "eng")
+                english = track.toMap().value("id").toInt();
+        QVERIFY(english > 0);
+        player.selectAudio(english);
+        QTRY_COMPARE(selectedLanguage(), QString("eng"));
+        player.openFile(QUrl::fromLocalFile(path));
+        QTRY_VERIFY_WITH_TIMEOUT(!player.loading(), 10000);
+        QTRY_COMPARE(selectedLanguage(), QString("deu"));
+        QVERIFY2(player.error().isEmpty(), qPrintable(player.error()));
+        player.stop();
+        QCOMPARE(fixtureHash(path), hash);
     }
     void repeatedOpenAndStop() {
         veluno::MpvEngine player(nullptr, true);

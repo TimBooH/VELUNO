@@ -95,8 +95,12 @@ class PersonalBackupTest : public QObject {
         personal.saveProgress();
         QVERIFY(!personal.isSeen(id));
         QCOMPARE(personal.continueWatching()->rowCount(), 1);
+        const auto progress = personal.progressForTitle(id);
+        QCOMPARE(progress.size(), 1);
+        QVERIFY(progress.first().toMap().value("position").toDouble() > 5.8);
+        QVERIFY(!progress.first().toMap().value("seen").toBool());
         player.stop();
-        library.playTitle(id);
+        personal.resumeTitle(id);
         QTRY_VERIFY_WITH_TIMEOUT(!player.loading(), 10000);
         QTRY_VERIFY_WITH_TIMEOUT(player.position() > 5.8, 5000);
         player.seek(13);

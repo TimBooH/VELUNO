@@ -14,11 +14,16 @@
 #include <QUrlQuery>
 #include <algorithm>
 namespace veluno {
+static QString matchKey(QString value) {
+    value = value.normalized(QString::NormalizationForm_KC).toCaseFolded();
+    value.remove(QRegularExpression("[^\\p{L}\\p{N}]+"));
+    return value;
+}
 MetadataController::MetadataController(Database &db, LibraryController &library,
                                        PersonalController &personal, QObject *parent,
-                                       const QUrl &api)
+                                       const QUrl &api, const QUrl &imageBase)
     : QObject(parent), m_db(db), m_library(library), m_personal(personal), m_api(api),
-      m_imageWorker(new QObject) {
+      m_imageBase(imageBase), m_imageWorker(new QObject) {
     m_imageWorker->moveToThread(&m_imageThread);
     connect(&m_imageThread, &QThread::finished, m_imageWorker, &QObject::deleteLater);
     m_imageThread.start();
@@ -32,6 +37,7 @@ MetadataController::MetadataController(Database &db, LibraryController &library,
         if (!allowed()) {
             ++m_generation;
             m_requests.clear();
+            m_imageRequests.clear();
             m_pendingTitles.clear();
             const auto pending = m_replies;
             for (auto *r : pending)
@@ -40,6 +46,7 @@ MetadataController::MetadataController(Database &db, LibraryController &library,
             QTimer::singleShot(2000, this, &MetadataController::refreshAll);
         emit changed();
     });
+    connect(&library, &LibraryController::catalogChanged, this, &MetadataController::changed);
     connect(&library, &LibraryController::scanCompleted, this,
             [this](bool) { QTimer::singleShot(1000, this, &MetadataController::refreshAll); });
     QTimer::singleShot(3000, this, &MetadataController::refreshAll);
@@ -49,6 +56,7 @@ MetadataController::~MetadataController() {
     m_pump.stop();
     m_refresh.stop();
     m_requests.clear();
+    m_imageRequests.clear();
     const auto replies = m_replies;
     for (auto *reply : replies) {
         reply->disconnect(this);
@@ -89,6 +97,7 @@ void MetadataController::setToken(const QString &token) {
         m_db.setSetting("tmdb_token", token.trimmed());
         ++m_generation;
         m_requests.clear();
+        m_imageRequests.clear();
         m_pendingTitles.clear();
         m_results.clear();
         const auto replies = m_replies;
@@ -111,7 +120,14 @@ void MetadataController::request(const QString &path, std::function<void(QJsonOb
     emit changed();
 }
 void MetadataController::pump() {
-    if (!allowed() || m_requests.isEmpty() || m_replies.size() >= 2)
+    if (!allowed() || m_replies.size() >= 2)
+        return;
+    if (!m_imageRequests.isEmpty()) {
+        const auto work = m_imageRequests.dequeue();
+        downloadImage(work.title, work.kind, work.remote);
+        return;
+    }
+    if (m_requests.isEmpty())
         return;
     const auto work = m_requests.dequeue();
     const auto generation = m_generation;
@@ -140,8 +156,17 @@ void MetadataController::pump() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError || bytes.size() > 4 * 1024 * 1024) {
             m_pendingTitles.clear();
+            if (status == 401 || status == 403) {
+                ++m_generation;
+                m_requests.clear();
+                m_imageRequests.clear();
+                const auto remaining = m_replies;
+                for (auto *pending : remaining)
+                    pending->abort();
+            }
             if (status == 429) {
                 m_requests.clear();
+                m_imageRequests.clear();
                 m_pump.stop();
                 const auto delay = std::clamp(reply->rawHeader("Retry-After").toInt(), 60, 3600);
                 QTimer::singleShot(delay * 1000, this, [this] {
@@ -150,7 +175,8 @@ void MetadataController::pump() {
                 });
             }
             report(
-                status == 401 ? "TMDB-Zugang abgewiesen. Bitte API-Lesezugriffstoken prüfen."
+                (status == 401 || status == 403)
+                    ? "TMDB-Zugang abgewiesen. Bitte API-Lesezugriffstoken prüfen."
                 : status == 429
                     ? "TMDB begrenzt die Abfragen. Die Aktualisierung wird später erneut versucht."
                     : "TMDB ist nicht erreichbar. Lokal gespeicherte Informationen bleiben "
@@ -204,7 +230,7 @@ void MetadataController::lookup(qint64 title, bool interactive, const QString &q
                                           {"year", year},
                                           {"overview", item.value("overview").toString()}};
                     hits.append(hit);
-                    if (name.simplified().compare(search.simplified(), Qt::CaseInsensitive) == 0 &&
+                    if (matchKey(name) == matchKey(search) &&
                         (!t.value("year").toInt() || t.value("year").toInt() == year))
                         exact.append(hit);
                 }
@@ -296,13 +322,52 @@ void MetadataController::fetch(qint64 title, qint64 provider) {
                 showImages(title);
         });
 }
+QVariantMap MetadataController::statistics() const {
+    const auto rows =
+        m_db.query("SELECT COUNT(*) AS total,COALESCE(SUM(d.provider_id>0),0) AS matched,"
+                   "COALESCE(SUM(d.poster<>''),0) AS posters FROM media_titles t LEFT JOIN "
+                   "media_details d ON d.title_id=t.id WHERE EXISTS(SELECT 1 FROM media_files f "
+                   "WHERE f.title_id=t.id)");
+    return rows.isEmpty() ? QVariantMap{} : rows.first().toMap();
+}
+void MetadataController::testAccess() {
+    if (!allowed()) {
+        report(
+            "TMDB einschalten und einen API-Lesezugriffstoken speichern, um den Zugang zu prüfen.");
+        return;
+    }
+    report("TMDB-Zugang wird geprüft …");
+    request("/configuration", [this](QJsonObject json) {
+        const auto url = QUrl(json.value("images").toObject().value("secure_base_url").toString());
+        report(url.scheme() == "https" && !url.host().isEmpty()
+                   ? "TMDB-Zugang erfolgreich geprüft. Titel und Bilder können abgerufen werden."
+                   : "TMDB lieferte keine gültige Konfiguration. Bitte später erneut prüfen.");
+    });
+}
+void MetadataController::retryMissingArtwork() {
+    if (!allowed())
+        return;
+    for (const auto &value : m_db.query(
+             "SELECT title_id,provider_id FROM media_details WHERE provider_id>0 AND "
+             "EXISTS(SELECT 1 FROM media_files f WHERE f.title_id=media_details.title_id) AND "
+             "(poster='' OR backdrop='' OR EXISTS(SELECT 1 FROM media_images i WHERE "
+             "i.title_id=media_details.title_id AND i.local_path='')) LIMIT 50")) {
+        const auto row = value.toMap();
+        const auto title = row.value("title_id").toLongLong();
+        if (m_pendingTitles.contains(title))
+            continue;
+        m_pendingTitles.insert(title);
+        fetch(title, row.value("provider_id").toLongLong());
+    }
+}
 void MetadataController::refreshAll() {
     if (!allowed())
         return;
     const auto before = QDateTime::currentDateTimeUtc().addDays(-7).toString(Qt::ISODate);
     for (const auto &v :
          m_db.query("SELECT t.id,d.provider_id FROM media_titles t LEFT JOIN media_details d ON "
-                    "d.title_id=t.id WHERE d.fetched_at IS NULL OR d.fetched_at<? LIMIT 50",
+                    "d.title_id=t.id WHERE EXISTS(SELECT 1 FROM media_files f WHERE "
+                    "f.title_id=t.id) AND (d.fetched_at IS NULL OR d.fetched_at<?) LIMIT 50",
                     {before})) {
         const auto title = v.toMap().value("id").toLongLong();
         if (m_pendingTitles.contains(title))
@@ -406,9 +471,15 @@ void MetadataController::image(qint64 title, const QString &kind, const QString 
         installImage(title, kind, remote, existing);
         return;
     }
+    m_imageRequests.enqueue({title, kind, remote});
+    emit changed();
+}
+void MetadataController::downloadImage(qint64 title, const QString &kind, const QString &remote) {
+    if (!allowed())
+        return;
     const auto generation = m_generation;
-    const QUrl url("https://image.tmdb.org/t/p/" + QString(kind == "poster" ? "w500" : "w1280") +
-                   remote);
+    const QUrl url =
+        m_imageBase.resolved(QUrl(QString(kind == "poster" ? "w500" : "w1280") + remote));
     QNetworkRequest request(url);
     request.setTransferTimeout(20000);
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
@@ -431,6 +502,9 @@ void MetadataController::image(qint64 title, const QString &kind, const QString 
             reply->error() == QNetworkReply::NoError && bytes.size() <= 12 * 1024 * 1024;
         reply->deleteLater();
         if (!ok || generation != m_generation || !allowed()) {
+            if (!ok && generation == m_generation && allowed())
+                report("Bildabruf fehlgeschlagen. Gespeicherte Daten bleiben erhalten; fehlende "
+                       "Bilder können erneut geladen werden.");
             emit changed();
             return;
         }

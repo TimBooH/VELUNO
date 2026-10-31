@@ -29,6 +29,7 @@ class MpvEngine final : public QObject {
     Q_PROPERTY(double speed READ speed WRITE setSpeed NOTIFY speedChanged)
     Q_PROPERTY(QString title READ title NOTIFY stateChanged)
     Q_PROPERTY(QString error READ error NOTIFY errorChanged)
+    Q_PROPERTY(QVariantMap diagnostics READ diagnostics NOTIFY mediaInfoChanged)
   public:
     explicit MpvEngine(QObject *parent = nullptr, bool nullOutput = false);
     ~MpvEngine() override;
@@ -44,6 +45,11 @@ class MpvEngine final : public QObject {
     }
     double creditsStart() const {
         return m_creditsStart;
+    }
+    QVariantMap diagnostics() const {
+        auto info = m_diagnostics;
+        info["rendering"] = m_nullOutput ? "Null-Ausgabe (Test)" : "libmpv Software-Render-API";
+        return info;
     }
     void configure(const QVariantMap &options);
     Q_INVOKABLE void selectAudio(int id);
@@ -113,6 +119,7 @@ class MpvEngine final : public QObject {
     void errorChanged();
 
   private:
+    QVariantMap m_diagnostics;
     QVariantList m_audioDevices, m_audioTracks, m_subtitleTracks;
     double m_creditsStart = -1;
     bool m_hasSubtitleBorderStyle = false;
