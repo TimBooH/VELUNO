@@ -14,3 +14,7 @@ Diese Liste dokumentiert noch ausstehende Tests auf dem echten Zielgerät. Cloud
 | Originaldateien | Dateigröße/Prüfsumme vor und nach Import, Abspielen und Zuordnung vergleichen | VELUNO verändert keine Originalmedien. Mit synthetischen Dateien automatisiert geprüft. |
 
 Für Fehler sind der genaue Text unter Einstellungen → Bibliothek, der betroffene Dateiname (ohne Zugangsdaten) und die Werte unter Player → Wiedergabedetails hilfreich. Diagnoseangaben sind keine automatische Freigabe für einen Stable-Release.
+
+## Nachprüfung der Nutzeraufnahme vom 31.10.2026
+
+Den neuen Unstable-Build mit derselben Datei (gegebenenfalls über SMB) starten: Das Videobild muss deckend bleiben, Grau-/Hauttöne dürfen nicht durch UI-Farben aufgehellt werden. Mehrfach Bibliothek → Fortsetzen → Zurück wechseln, pausieren, Vollbild und Fenstergröße wechseln. Hinter dem Player darf keine Bibliothek durchscheinen; nach Zurück darf kein Videorest sichtbar bleiben. Die Puffer-/Qt-Paint-Ursache ist automatisiert nachgewiesen und korrigiert; die konkrete Aufnahme und Hardware sind hier nicht als vollständig nachgetestet markiert. Bei verbleibender Überhellung zusätzlich Codec, Hardwaredecoder und HDR-/Farbraum des betreffenden Mediums prüfen.

@@ -39,6 +39,14 @@ void VideoWorker::renderFrame() {
     };
     const int result = mpv_render_context_render(m_context, params);
     if (result < 0) { emit failed(QString("Videobild konnte nicht gerendert werden: %1").arg(QString::fromUtf8(mpv_error_string(result)))); return; }
+    // mpv's bgr0/0rgb padding is not an alpha channel. Qt's RGB32 contract
+    // requires 0xffRRGGBB, including when the image reaches a GPU texture.
+    // Leaving padding at zero causes blending/overbright output on that path.
+    for (int y = 0; y < image.height(); ++y) {
+        auto *pixels = reinterpret_cast<QRgb *>(image.scanLine(y));
+        for (int x = 0; x < image.width(); ++x)
+            pixels[x] |= 0xff000000u;
+    }
     {
         QMutexLocker lock(&m_mailbox->mutex);
         m_mailbox->latest = std::move(image);

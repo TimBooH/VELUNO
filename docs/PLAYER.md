@@ -27,3 +27,7 @@ CPU-Last und erreichbare Bildrate hängen von Auflösung und Hardware ab. 4K/HDR
 - Ton wird in den Controller-Tests über einen Null-Ausgang geprüft; das Render-Testvideo ist stumm. Echte PipeWire-/Audio-Geräte und hörbare Wiedergabe sind in der Cloud nicht geprüft.
 
 Finaler Nachweis: alle vier Testsuiten und Paketstart erfolgreich in [Actions-Lauf 40949745517](https://github.com/TimBooH/VELUNO/actions/runs/40949745517). [AppImage-Artefakt](https://github.com/TimBooH/VELUNO/actions/runs/40949745517/artifacts/12930812787). Details stehen im Entwicklungsprotokoll. Die KDE-/CachyOS-/HiDPI-Abnahme bleibt auf dem Zielsystem erforderlich.
+
+## Korrektur der Deckkraft · 31.10.2026 (unstable)
+
+Bei bgr0/0rgb-Ausgabe ist das vierte Byte Padding und kein gültiger Alphakanal. Der Renderer normalisiert dieses Byte vor der Übergabe an Qt auf 255 gemäß QImage::Format_RGB32. Das verhindert nicht deckende bzw. ungültige premultiplizierte Texturwerte; die RGB-Farbwerte bleiben erhalten. Regressionen prüfen reale mpv-Puffer einschließlich Balken, VideoItem::paint auf ARGB-Fläche, neutrale Helligkeit vor farbigem Hintergrund, Pause/Sichtbarkeit sowie weiterhin Farbkanäle und Resize unter nativem Wayland. Der konkrete KWin-/GPU-/HDR-Zieltest bleibt erforderlich; dies ist keine Änderung von Gamma oder Tone Mapping.
