@@ -31,3 +31,5 @@ Finaler Nachweis: alle vier Testsuiten und Paketstart erfolgreich in [Actions-La
 ## Korrektur der Deckkraft · 31.10.2026 (unstable)
 
 Bei bgr0/0rgb-Ausgabe ist das vierte Byte Padding und kein gültiger Alphakanal. Der Renderer normalisiert dieses Byte vor der Übergabe an Qt auf 255 gemäß QImage::Format_RGB32. Das verhindert nicht deckende bzw. ungültige premultiplizierte Texturwerte; die RGB-Farbwerte bleiben erhalten. Regressionen prüfen reale mpv-Puffer einschließlich Balken, VideoItem::paint auf ARGB-Fläche, neutrale Helligkeit vor farbigem Hintergrund, Pause/Sichtbarkeit sowie weiterhin Farbkanäle und Resize unter nativem Wayland. Der konkrete KWin-/GPU-/HDR-Zieltest bleibt erforderlich; dies ist keine Änderung von Gamma oder Tone Mapping.
+
+[Geprüfter Unstable-Testbuild mit Pixelkorrektur](https://github.com/TimBooH/VELUNO/actions/runs/41197698633/artifacts/13041840320), GitHub-Anmeldung erforderlich; verfügbar bis 14.11.2026 um 12:42 Uhr Europe/Berlin. Alle acht Testsuiten und Paketprüfungen erfolgreich; Zielhardware-Nachprüfung siehe TARGET_TESTS.md.
