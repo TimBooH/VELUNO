@@ -12,14 +12,15 @@ if [[ -e "$app_dir" ]]; then
     exit 1
 fi
 fetch_tool() {
-    local name=$1 repository=$2 digest=$3
-    curl --fail --location --retry 3 "https://github.com/$repository/releases/download/continuous/$name-x86_64.AppImage" --output "$output_dir/tools/$name"
+    local name=$1 repository=$2 release_tag=$3 digest=$4
+    curl --fail --location --retry 3 "https://github.com/$repository/releases/download/$release_tag/$name-x86_64.AppImage" --output "$output_dir/tools/$name"
     echo "$digest  $output_dir/tools/$name" | sha256sum --check
     chmod +x "$output_dir/tools/$name"
 }
-# continuous URLs are checksum locked: changed upstream assets fail closed.
-fetch_tool linuxdeploy linuxdeploy/linuxdeploy 8aea8da0f7f7039d2a2cecb14657d752a222a5e1d3825caeef186c82f751cdd1
-fetch_tool linuxdeploy-plugin-qt linuxdeploy/linuxdeploy-plugin-qt cfc1055b2b9dbc08412b579f20990b7b41a17b61beaa5847dc9477c96c9e9617
+# Pin the dated linuxdeploy release; never adopt a replaced continuous asset silently.
+# The Qt plugin remains checksum locked until a suitable dated release is selected.
+fetch_tool linuxdeploy linuxdeploy/linuxdeploy 1-alpha-20251107-1 c20cd71e3a4e3b80c3483cef793cda3f4e990aca14014d23c544ca3ce1270b4d
+fetch_tool linuxdeploy-plugin-qt linuxdeploy/linuxdeploy-plugin-qt continuous cfc1055b2b9dbc08412b579f20990b7b41a17b61beaa5847dc9477c96c9e9617
 DESTDIR="$app_dir" cmake --install "$build_dir" --prefix /usr
 export PATH="$output_dir/tools:$PATH"
 export APPIMAGE_EXTRACT_AND_RUN=1
