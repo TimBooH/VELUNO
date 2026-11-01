@@ -107,6 +107,62 @@ class Setup : public QObject {
         painter.end();
         return image.save(path) ? QUrl::fromLocalFile(path) : QUrl{};
     }
+    Q_INVOKABLE QString landscapeFixture(int index) {
+        const auto relative = QString("images/test-landscape-%1.png").arg(index);
+        const auto path = m_directory.filePath("app/" + relative);
+        QDir().mkpath(QFileInfo(path).absolutePath());
+        QImage image(backdropFixtureUrl().toLocalFile());
+        QPainter painter(&image);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceAtop);
+        painter.fillRect(image.rect(), QColor::fromHsv((index * 53) % 360, 140, 170, 55));
+        painter.end();
+        return image.save(path) ? relative : QString{};
+    }
+    Q_INVOKABLE void seedLandscapeLibrary() {
+        // Local synthetic movies/series populate the real homepage for UI validation.
+        veluno::LibraryRepository repo(*m_database);
+        const QStringList names = {"Abendlicht", "Blaue Stunde", "Die Küste", "Ferne Welten",
+                                   "Gezeiten", "Hinter dem Horizont", "Lichtspiel", "Morgenrot",
+                                   "Nachtzug", "Orbit", "Sternenstaub", "Unterwegs"};
+        QStringList posters, backdrops;
+        for (int index = 0; index < 6; ++index) {
+            posters << artworkFixture(index);
+            backdrops << landscapeFixture(index);
+        }
+        for (int index = 0; index < 20; ++index) {
+            const auto kind = index < 12 ? QStringLiteral("movie") : QStringLiteral("series");
+            const auto folder = m_directory.filePath("preview-" + kind);
+            QDir().mkpath(folder);
+            veluno::ScannedFile file;
+            file.sourceId = repo.addSource(folder, kind);
+            file.path = folder + QString("/preview-%1.mp4").arg(index);
+            QFile::copy(videoFixture().toLocalFile(), file.path);
+            file.kind = kind;
+            file.title = names[index % names.size()];
+            file.year = 2020 + index % 5;
+            file.season = kind == "series" ? 1 : 0;
+            file.episode = kind == "series" ? 1 : 0;
+            file.width = 160;
+            file.height = 90;
+            file.duration = 14;
+            repo.record(file, "landscape-test");
+            const auto title = repo.file(file.path).value("title_id").toLongLong();
+            m_database->query("INSERT INTO media_details(title_id,poster,backdrop) VALUES(?,?,?) "
+                              "ON CONFLICT(title_id) DO UPDATE SET poster=excluded.poster,"
+                              "backdrop=excluded.backdrop", {title, posters[index % 6], backdrops[index % 6]});
+            if (index < 3) seedDetailProgress(title, 0, 0, 3 + index);
+        }
+        for (const auto &row : m_database->query("SELECT id FROM media_titles")) {
+            const auto id = row.toMap().value("id").toLongLong();
+            m_database->query("INSERT INTO media_details(title_id,poster,backdrop) VALUES(?,?,?) "
+                              "ON CONFLICT(title_id) DO UPDATE SET "
+                              "poster=CASE WHEN poster='' THEN excluded.poster ELSE poster END,"
+                              "backdrop=CASE WHEN backdrop='' THEN excluded.backdrop ELSE backdrop END",
+                              {id, posters[id % 6], backdrops[id % 6]});
+        }
+        m_library->reload();
+        m_personal->refresh();
+    }
     Q_INVOKABLE qint64 detailSeriesFixture() {
         const auto folder = m_directory.filePath("detail-series");
         QDir().mkpath(folder);

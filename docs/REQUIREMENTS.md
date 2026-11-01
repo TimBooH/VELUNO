@@ -13,9 +13,9 @@ Die ausdrücklichen Entwicklungsfreigaben ersetzen den Planungsstatus des PDFs f
 | UI-001 | Designs | Beide Designs über gemeinsame semantische Palette; UI-/Screenshotprüfung, Zielabnahme offen |
 | UI-002 | Feste obere Navigation | Alle fünf Navigationsbereiche funktionsfähig; Suche/Profilmenü rechts, Einstellungen im Profilmenü |
 | UI-003 | Startseite ohne großen Hero-Banner | Am 31.10.2026 erneut ausdrücklich bestätigt: kein Startseitenbanner; Weiterschauen, Zuletzt hinzugefügt, Meine Filme, Meine Serien in Sollreihenfolge; leere Reihen verborgen |
-| UI-004 | Kacheln und Scrollverhalten | Querformat-Fortschrittskacheln und horizontale Reihen, Posterraster; große Bibliotheken/HiDPI offen |
+| UI-004 | Kacheln und Scrollverhalten | Nutzeränderung 01.11.2026: Startseitenreihen als 16:9-Bildkarten; Weiterschauen mit Fortschritt. Film-/Serien-/Favoritenübersichten bleiben Hochformatraster; horizontale Navigation, Mausrad und Hover geprüft; große Bibliotheken/HiDPI offen |
 | UI-005 | Zufällige Startseitenreihen | Stabile Zufallsreihen pro Sitzung für Filme und Serien umgesetzt |
-| UI-006 | Interaktive Poster und Detailseiten | Poster/Backdrop, Hover/Play, Metadaten, geschützte Bilderwahl und Versions-/Episodendetails implementiert |
+| UI-006 | Interaktive Poster und Detailseiten | Startseiten-Hovervorschau mit Play/Favorit/Details, Hintergründe mit Posterfallback; Raster/Detailansichten, geschützte Bilderwahl und Versions-/Episodendetails erhalten |
 | UI-007 | Bibliotheksübersichten | Film-/Serienraster mit Titel/Jahr/Neu-Sortierung und Verfügbarkeitsfilter umgesetzt |
 | LIB-001 | Mehrere Medienordner | Mehrere lokale und SMB-Film-/Serienordner über KDE, sichere Deaktivierung umgesetzt; echtes NAS ungetestet |
 | LIB-002 | Import und Beobachtung | Rekursiver Import, Startprüfung, Dateibeobachtung und 60-s-Rückfallprüfung umgesetzt; reale Mount-Abnahme offen |

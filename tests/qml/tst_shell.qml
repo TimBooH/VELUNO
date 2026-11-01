@@ -19,8 +19,11 @@ TestCase {
     Component {
         id: shelfFixture
         Rectangle {
+            id: fixtureRoot
+            required property QtObject libraryData
+            required property QtObject personalData
             width: 940
-            height: 400
+            height: 240
             color: fixtureColors.background
             property alias rows: fixtureModel
             property alias shelf: fixtureShelf
@@ -34,6 +37,8 @@ TestCase {
                 anchors.fill: parent
                 anchors.margins: 12
                 theme: fixtureColors
+                library: fixtureRoot.libraryData
+                personal: fixtureRoot.personalData
                 model: fixtureModel
                 heading: "Meine Filme"
                 onDetailsRequested: function (id) {
@@ -367,7 +372,7 @@ TestCase {
         }
     }
     function test_streamingShelfArtworkFallbackAndNavigation() {
-        let fixture = createTemporaryObject(shelfFixture, shell.contentItem);
+        let fixture = createTemporaryObject(shelfFixture, shell.contentItem, {libraryData: library, personalData: personal});
         verify(fixture !== null);
         let titles = ["Orbit", "Nachtzug", "Gezeiten", "Fernweh", "Licht", "Morgen"];
         for (let i = 0; i < 12; ++i)
@@ -378,7 +383,8 @@ TestCase {
                     year: 2020 + i % 6,
                     kind: "movie",
                     available: true,
-                    poster: i === 11 ? "images/nonexistent.png" : testInput.artworkFixture(i % 6)
+                    poster: i === 11 ? "images/nonexistent.png" : testInput.artworkFixture(i % 6),
+                    backdrop: i === 11 ? "" : i === 10 ? "images/nonexistent-wide.png" : testInput.landscapeFixture(i % 6)
                 }
             });
         let row = findChild(fixture, "posterRow");
@@ -390,7 +396,8 @@ TestCase {
         verify(!previous.enabled);
         let card = row.itemAtIndex(0);
         verify(card !== null);
-        tryCompare(findChild(card, "posterArtwork"), "status", Image.Ready);
+        tryCompare(findChild(card, "landscapeArtwork"), "status", Image.Ready);
+        verify(card.width > card.height);
         mouseClick(card, 20, 20);
         compare(fixture.detailsId, 1);
         mouseMove(card, card.width / 2, 70);
@@ -398,6 +405,21 @@ TestCase {
         let play = findChild(card, "posterPlay");
         mouseClick(play);
         compare(fixture.playId, 1);
+        compare(fixture.detailsId, 1);
+        mouseMove(card, 20, 20);
+        let preview = findChild(card, "cardPreview");
+        tryCompare(preview, "opened", true, 3000);
+        wait(200);
+        verify(preview.opened);
+        mouseMove(preview.contentItem, preview.width / 2, 30);
+        wait(180);
+        verify(preview.opened);
+        verify(preview.x >= 0 && preview.x + preview.width <= shell.width);
+        verify(preview.y >= 0 && preview.y + preview.height <= shell.height);
+        if (screenshotDirectory.length > 0)
+            grabImage(shell.contentItem.parent).save(screenshotDirectory + "/landscape-hover.png");
+        mouseClick(findChild(preview, "previewDetails"));
+        tryCompare(preview, "opened", false);
         compare(fixture.detailsId, 1);
         mouseMove(next);
         if (screenshotDirectory.length > 0) {
@@ -408,6 +430,14 @@ TestCase {
         waitForRendering(fixture);
         if (screenshotDirectory.length > 0)
             grabImage(shell.contentItem.parent).save(screenshotDirectory + "/streaming-shelf-light-fixture.png");
+        mouseMove(card, 20, 20);
+        tryCompare(preview, "opened", true, 3000);
+        mouseMove(preview.contentItem, preview.width / 2, 30);
+        waitForRendering(preview.contentItem);
+        if (screenshotDirectory.length > 0)
+            grabImage(shell.contentItem.parent).save(screenshotDirectory + "/landscape-hover-light.png");
+        mouseMove(next);
+        tryCompare(preview, "opened", false);
         fixtureColors.light = false;
         mouseClick(next);
         tryVerify(function () {
@@ -430,6 +460,11 @@ TestCase {
         tryVerify(function () {
             return row.itemAtIndex(11) !== null;
         });
+        let backup = row.itemAtIndex(10);
+        verify(backup !== null);
+        tryCompare(findChild(backup, "landscapeArtwork"), "status", Image.Error);
+        tryCompare(findChild(backup, "posterArtwork"), "status", Image.Ready);
+        compare(backup.artworkStatus, Image.Ready);
         let fallback = row.itemAtIndex(11);
         verify(fallback !== null);
         tryCompare(fallback, "artworkStatus", Image.Error);
@@ -645,6 +680,92 @@ TestCase {
         tryCompare(shell, "visibility", Window.Windowed);
         mouseClick(close);
         tryCompare(shell, "visible", false);
+    }
+    function test_z_referenceHomeLayout() {
+        // The preceding wizard can still be scanning. Drain it before writing
+        // the controlled fixture directly into the temporary test database.
+        library.monitoring = false;
+        tryCompare(library, "busy", false, 10000);
+        wait(40);
+        tryCompare(library, "busy", false, 10000);
+        testInput.seedLandscapeLibrary();
+        shell.currentPage = "Startseite";
+        let recent = findChild(shell, "recentShelf");
+        tryCompare(recent, "visible", true);
+        tryCompare(findChild(shell, "moviesShelf"), "visible", true);
+        tryCompare(findChild(shell, "seriesShelf"), "visible", true);
+        tryCompare(findChild(shell, "continueShelf"), "visible", true);
+        tryCompare(findChild(shell, "configureArtwork"), "visible", false);
+        let row = findChild(recent, "posterRow");
+        row.forceLayout();
+        tryVerify(function () { return row.count >= 20 && row.itemAtIndex(0) !== null; });
+        tryVerify(function () {
+            let item = row.itemAtIndex(0);
+            let art = item ? findChild(item, "landscapeArtwork") : null;
+            return art !== null && art.status === Image.Ready;
+        });
+        let card = row.itemAtIndex(0);
+        verify(card.width > card.height);
+        let home = findChild(shell, "homeScroll");
+        mouseWheel(card, card.width / 2, card.height / 2, 0, -120);
+        tryVerify(function () { return home.contentItem.contentY > 0; });
+        home.contentItem.cancelFlick();
+        home.contentItem.contentY = 0;
+        waitForRendering(shell.contentItem);
+        mouseMove(card, 20, 20);
+        let preview = findChild(card, "cardPreview");
+        tryCompare(preview, "opened", true, 3000);
+        mouseMove(preview.contentItem, preview.width / 2, 30);
+        let favorite = findChild(preview, "previewFavorite");
+        let wasFavorite = personal.isFavorite(card.entry.id);
+        mouseClick(favorite);
+        compare(personal.isFavorite(card.entry.id), !wasFavorite);
+        mouseClick(favorite);
+        compare(personal.isFavorite(card.entry.id), wasFavorite);
+        shell.width = 1100;
+        tryCompare(preview, "opened", false);
+        shell.width = 1240;
+        waitForRendering(shell.contentItem);
+        mouseMove(findChild(shell, "navigationHeader"), 15, 10);
+        mouseMove(card, 20, 20);
+        tryCompare(preview, "opened", true, 3000);
+        home.contentItem.contentY += 30;
+        tryCompare(preview, "opened", false);
+        home.contentItem.contentY = 0;
+        mouseMove(findChild(shell, "navigationHeader"), 15, 10);
+        let moviesRow = findChild(findChild(shell, "moviesShelf"), "posterRow");
+        moviesRow.forceLayout();
+        tryVerify(function () { return moviesRow.itemAtIndex(0) !== null; });
+        let movie = moviesRow.itemAtIndex(0);
+        compare(movie.entry.kind, "movie");
+        mouseMove(movie, 20, 20);
+        preview = findChild(movie, "cardPreview");
+        tryCompare(preview, "opened", true, 3000);
+        mouseClick(findChild(preview, "previewPlay"));
+        tryCompare(shell, "playerVisible", true);
+        tryCompare(playback, "loading", false, 10000);
+        compare(playback.error, "");
+        shell.closePlayer();
+        library.setOptions("movie", "title", -1);
+        shell.currentPage = "Filme";
+        let grid = findChild(shell, "movieGrid");
+        tryCompare(grid, "visible", true);
+        tryVerify(function () { return grid.count >= 12 && grid.height > 0; });
+        grid.positionViewAtBeginning();
+        grid.forceLayout();
+        tryVerify(function () { return grid.itemAtIndex(0) !== null; });
+        verify(grid.itemAtIndex(0).height > grid.itemAtIndex(0).width);
+        shell.currentPage = "Startseite";
+        mouseMove(findChild(shell, "navigationHeader"), 15, 10);
+        wait(200);
+        waitForRendering(shell.contentItem);
+        if (screenshotDirectory.length > 0)
+            grabImage(shell.contentItem.parent).save(screenshotDirectory + "/reference-home-midnight.png");
+        appSettings.theme = "light";
+        wait(60);
+        waitForRendering(shell.contentItem);
+        if (screenshotDirectory.length > 0)
+            grabImage(shell.contentItem.parent).save(screenshotDirectory + "/reference-home-light.png");
     }
     function test_regularWindow() {
         compare(shell.title, "VELUNO");

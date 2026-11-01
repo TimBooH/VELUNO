@@ -37,3 +37,19 @@ Der Nutzer hat die separate System-Titelleiste ausdrücklich abgewählt. Das nat
 [Midnight Blue bei 980×600](screenshots/integrated-window-midnight.png) · [Light Mode bei 980×600](screenshots/integrated-window-light.png). Aufnahmen aus der laufenden Qt-Anwendung mit synthetischen Testdaten. Das Fenster bleibt ein reguläres Linux-Anwendungsfenster; die eigentlichen Move-/Resize-Operationen werden über Qt an den Wayland-Compositor delegiert. KWin-/HiDPI-/Mehrschirm- und echte Pointergesten bleiben Zielgerätetests.
 
 [Geprüfter Unstable-Build mit integrierter Fenstersteuerung](https://github.com/TimBooH/VELUNO/actions/runs/41200798935/artifacts/13042876173) (GitHub-Anmeldung, verfügbar bis 14.11.2026 um 13:25 Uhr Europe/Berlin). Alle acht Testsuiten und AppImage-Prüfungen bestanden; Details im Entwicklungsprotokoll. Enthält auch die vorherige Pixel-/Deckkraftkorrektur des Players.
+
+## Querformatreihen nach Videovorlage · 01.11.2026
+
+Explizite Nutzerentscheidung zur Abweichung von der bisherigen UI-004-Darstellung: **„Startseitenreihen wie im Video in Querformat; Übersichten weiter in Hochformat“**. Die vier vereinbarten Reihen und die Startseite ohne großen Hero bleiben erhalten. Beide vorhandenen Themes und die integrierte Fenstersteuerung werden weiterverwendet.
+
+| Before | After | Why |
+| --- | --- | --- |
+| Hochformatposter auch in den Startseitenreihen | 16:9-Karten mit lokaler Hintergrundgrafik und eingeblendetem Titel | Die Bildwirkung und Reihendichte entsprechen der gezeigten Browse-Vorlage |
+| Große Zeilenhöhe, Textzeile unter jedem Bild | Kleinere Reihenüberschriften, knappe Zwischenräume und Titel im Bild | Mehr Sammlung ist gleichzeitig sichtbar |
+| Kleine Wiedergabeaktion beim Hover | Zeitverzögerte, schwebende Vorschau mit Wiedergabe, Favorit und Details | Direkte Aktionen ohne Abschneiden durch die Reihe |
+| Eigene Abmessungen für Weiterschauen | Gleiche Kartenbreite und Bildproportion, Fortschritt am unteren Rand | Konsistente Reihen mit sichtbarem persönlichen Fortschritt |
+| Feste Bildwahl | Hintergrund → Poster → lesbare Titeldarstellung | Fehlende Bilder verhindern die lokale Nutzung nicht |
+
+[Startseite / Midnight Blue](screenshots/reference-home-midnight.png) · [Startseite / Light Mode](screenshots/reference-home-light.png) · [Hover / Midnight Blue](screenshots/reference-hover-midnight.png) · [Hover / Light Mode](screenshots/reference-hover-light.png).
+
+Die Startseitenbilder sind selbst erzeugte Testmotive in einer temporären Bibliothek; sie illustrieren die laufende QML-Oberfläche und werden nicht als Filme oder fremde Poster mitgeliefert. Der Hover-Screenshot stammt aus dem Einzelreihentest. In der echten Bibliothek erscheinen vorhandene lokale/TMDB-Bilder. Film-/Serien-/Favoritenraster bleiben hochformatig. Die Umsetzung ergänzt keine Netflix-Inhalte, Empfehlungsranglisten oder weitere Startseitenkategorien. Prüfungen und verbleibende Zielgeräteabnahme stehen im Entwicklungsprotokoll.

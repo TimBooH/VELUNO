@@ -12,6 +12,7 @@ Item {
     property string pageTitle: "Startseite"
     property string description: "Deine Filme und Serien. An einem Ort."
     property int optionsVersion: 0
+    property int previewRevision: 0
     Connections {
         target: library
         function onOptionsChanged() {
@@ -103,7 +104,7 @@ Item {
             }
         }
         RowLayout {
-            visible: page.pageTitle === "Startseite" && library.movieCount + library.seriesCount > 0 && (!page.metadata.configured || library.onlineConsent !== "granted")
+            visible: page.pageTitle === "Startseite" && library.movieCount + library.seriesCount > 0 && (!page.metadata.configured || library.onlineConsent !== "granted") && page.metadata.statistics.posters < page.metadata.statistics.total
             Layout.fillWidth: true
             spacing: 12
             Label {
@@ -124,38 +125,77 @@ Item {
             text: library.paused ? "Bibliotheksscan pausiert" : "Bibliothek wird im Hintergrund ergänzt · " + library.checked + " Dateien geprüft"
             color: theme.accent
         }
+        Connections {
+            target: homeScroll.contentItem
+            ignoreUnknownSignals: true
+            function onHeightChanged() {
+                page.previewRevision++;
+            }
+            function onContentYChanged() {
+                page.previewRevision++;
+            }
+        }
         ScrollView {
+            id: homeScroll
+            objectName: "homeScroll"
             visible: pageTitle === "Startseite"
             Layout.fillWidth: true
             Layout.fillHeight: true
             contentWidth: availableWidth
             ColumnLayout {
                 width: parent.width
-                spacing: 30
+                spacing: 18
                 ContinueShelf {
                     theme: page.theme
                     personal: page.personal
                 }
                 PosterShelf {
                     theme: page.theme
+                    library: page.library
+                    personal: page.personal
+                    previewRevision: page.previewRevision
+                    scrolling: !!(homeScroll.contentItem && homeScroll.contentItem.moving)
+                    objectName: "recentShelf"
                     model: library.recent
                     heading: qsTr("Zuletzt hinzugefügt")
-                    onDetailsRequested: library.openDetails(id)
-                    onPlayRequested: library.playTitle(id)
+                    onDetailsRequested: function (id) {
+                        page.library.openDetails(id);
+                    }
+                    onPlayRequested: function (id) {
+                        page.library.playTitle(id);
+                    }
                 }
                 PosterShelf {
                     theme: page.theme
+                    library: page.library
+                    personal: page.personal
+                    previewRevision: page.previewRevision
+                    scrolling: !!(homeScroll.contentItem && homeScroll.contentItem.moving)
+                    objectName: "moviesShelf"
                     model: library.randomMovies
                     heading: qsTr("Meine Filme")
-                    onDetailsRequested: library.openDetails(id)
-                    onPlayRequested: library.playTitle(id)
+                    onDetailsRequested: function (id) {
+                        page.library.openDetails(id);
+                    }
+                    onPlayRequested: function (id) {
+                        page.library.playTitle(id);
+                    }
                 }
                 PosterShelf {
                     theme: page.theme
+                    library: page.library
+                    personal: page.personal
+                    previewRevision: page.previewRevision
+                    scrolling: !!(homeScroll.contentItem && homeScroll.contentItem.moving)
+                    objectName: "seriesShelf"
                     model: library.randomSeries
                     heading: qsTr("Meine Serien")
-                    onDetailsRequested: library.openDetails(id)
-                    onPlayRequested: library.playTitle(id)
+                    onDetailsRequested: function (id) {
+                        page.library.openDetails(id);
+                    }
+                    onPlayRequested: function (id) {
+                        page.library.playTitle(id);
+                    }
                 }
                 Label {
                     visible: library.movieCount + library.seriesCount === 0
@@ -177,7 +217,8 @@ Item {
             cellWidth: library.tileSize + 18
             cellHeight: library.tileSize * 1.5 + 56
             model: pageTitle === "Favoriten" ? personal.favorites : page.kind === "movie" ? library.movies : library.series
-            ScrollBar.vertical: ScrollBar {}
+            ScrollBar.vertical: ScrollBar {
+            }
             delegate: PosterCard {
                 theme: page.theme
                 width: page.library.tileSize
@@ -208,7 +249,8 @@ Item {
             clip: true
             spacing: 10
             model: library.unassigned
-            ScrollBar.vertical: ScrollBar {}
+            ScrollBar.vertical: ScrollBar {
+            }
             delegate: Rectangle {
                 required property var entry
                 width: ListView.view.width
